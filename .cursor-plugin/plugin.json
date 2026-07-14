@@ -1,0 +1,18 @@
+{
+  "name": "teach-me",
+  "displayName": "teach-me",
+  "description": "Learning coach: turn work and reading into durable understanding. Explicitly invoked.",
+  "version": "0.0.1",
+  "author": {
+    "name": "young1lin"
+  },
+  "homepage": "https://github.com/young1lin/teach-me",
+  "repository": "https://github.com/young1lin/teach-me",
+  "license": "MIT",
+  "keywords": [
+    "learning",
+    "teaching",
+    "mastery"
+  ],
+  "skills": "./skills/"
+}

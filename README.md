@@ -1,0 +1,170 @@
+# teach-me
+
+![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
+
+**AI wrote it. Do you understand it?**
+
+English | [中文](README.zh-CN.md)
+
+A learning-coach skill for coding agents. Turn LLM-era work and reading into durable
+understanding: debrief work you just did, or learn a topic to observable mastery, with
+resumable checkpoints. **Explicitly invoked** — it never auto-activates.
+
+Invoke with `/teach-me` (Claude Code / Cursor / Antigravity) or `$teach-me` (Codex /
+OpenCode).
+
+> Python 3.8+ is required for the optional Obsidian archive mirror and the dev
+> tooling (`scripts/`); the teaching skill itself runs entirely inside your agent.
+
+## Teaching modes
+
+Pick how you want to be taught. A mode changes the teaching style only — mastery is
+always measured the same way (explain / apply / transfer). Socratic is the default; the
+others are opt-in flags.
+
+| Mode | Flag (alias) | Style |
+|---|---|---|
+| socratic (default) | `--socratic` (`--soc`), or no flag | Question-led discovery |
+| feynman | `--feynman` (`--fey`) | You explain first; the coach finds and fills gaps |
+| drill | `--drill` (`--dri`) | Deliberate-practice reps on your weakest sub-skill |
+
+```bash
+/teach-me TCP congestion control              # Claude Code / Cursor / Antigravity (socratic default)
+/teach-me --fey                               # Feynman-style debrief of work you just did
+$teach-me --dri regex                         # Codex / OpenCode
+```
+
+Mid-session, just say "switch to feynman" (any language) — no re-invocation needed.
+
+Example (illustrative):
+
+```text
+> /teach-me
+1 candidate from this session: "why the retry uses exponential backoff + jitter"
+(agent-written). In one sentence — why the jitter?
+> so retries don't all wake up at the same time
+Verdict: correct — thundering-herd avoidance.
+Your turn: we drop the jitter but keep backoff — what failure returns, and when?
+```
+
+Pairs well with [grill-me](https://github.com/mattpocock/skills): grill your plan before
+you build; run teach-me after you ship, so the speed AI gives you doesn't cost you the
+understanding.
+
+## Your learning data
+
+Everything you master is saved as plain markdown under one root — shared by every agent
+you use, organized by topic (which project it came from is metadata inside each file):
+
+```text
+~/.teach-me/config.json            # where your root is configured
+<root>/records/<topic>/<concept>.md
+<root>/checkpoints/<topic>.md
+```
+
+The first time a session saves anything, teach-me asks once: keep the default
+`~/.teach-me/` or name your own directory. The answer is remembered in
+`~/.teach-me/config.json` — you're never asked again. Browse or grep the records freely;
+they're just markdown with frontmatter (`topic`, `project`, `state`, `evidence`).
+
+There is no database and no search index — your agent's own `grep` / `Glob` / `Read` is
+the retrieval engine. To pick a topic back up, `/teach-me resume <topic>`; if nothing
+matches, teach-me says so — it never invents prior learning.
+
+## Archive to Obsidian (optional)
+
+Mirror everything you've mastered into your own vault. Add an `archive` section to
+`~/.teach-me/config.json` — a configured destination is your standing consent; teach-me
+mirrors after every save, automatically:
+
+```json
+{
+  "root": "~/.teach-me",
+  "archive": {
+    "obsidian": { "vault_path": "D:/vault", "folder": "teach-me" }
+  }
+}
+```
+
+- **Obsidian** — records land in your vault as plain markdown (`teach-me/<topic>/…`).
+  Works even while Obsidian is closed.
+
+Archiving is best-effort: if the vault path is missing, you get a one-line note and the
+lesson continues. Preview anytime with `python skills/teach-me/scripts/archive.py --dry-run`.
+
+## Installation
+
+Install differs by harness. If you use more than one, install teach-me separately for
+each.
+
+### Claude Code
+
+Register this repo as a marketplace, then install:
+
+```bash
+/plugin marketplace add young1lin/teach-me
+/plugin install teach-me@teach-me-marketplace
+```
+
+### Codex
+
+Install from this repository:
+
+```bash
+/plugins install https://github.com/young1lin/teach-me
+```
+
+Then invoke with `$teach-me`.
+
+### Cursor
+
+```text
+/add-plugin teach-me
+```
+
+Or search for "teach-me" in the plugin marketplace and point it at
+`https://github.com/young1lin/teach-me`.
+
+### Kimi Code
+
+```text
+/plugins install https://github.com/young1lin/teach-me
+```
+
+### OpenCode
+
+See [`.opencode/INSTALL.md`](.opencode/INSTALL.md) — add this repo's `skills/` to
+OpenCode's `skills.paths`, then invoke with `$teach-me`.
+
+### Pi
+
+```bash
+pi install git:github.com/young1lin/teach-me
+```
+
+### Antigravity
+
+```bash
+agy plugin install https://github.com/young1lin/teach-me
+```
+
+### Any `.agents/`-compatible tool (universal)
+
+```bash
+npx skills add young1lin/teach-me
+```
+
+This installs the skill into your agent's skills directory (Claude Code, Cursor, Codex,
+OpenCode, and 70+ others).
+
+## Layout
+
+- `skills/teach-me/` — the skill (`SKILL.md`, `references/`, `agents/`, `scripts/`).
+- `.<agent>-plugin/`, `.agents/`, `.opencode/`, `package.json` — per-agent packaging.
+- `scripts/` — `validate.py` (packaging) and `validate_skill.py` (SKILL-standard) gates.
+- `tests/` — behavior scenarios + pytest suite for the archive layer.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

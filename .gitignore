@@ -1,0 +1,39 @@
+# --- Claude Code local state (never commit) ---
+# Personal/local project instructions
+.claude/CLAUDE.md
+# Worktrees created by Claude Code (EnterWorktree) — avoid committing worktree dirs
+.claude/worktrees/
+# Locally-linked teach-me skill (dev convenience; the source lives in skills/)
+.claude/skills/teach-me
+
+# --- Secrets / local environment (never commit) ---
+.env
+.env.*
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# --- Virtual environments (uv / venv / pipenv) ---
+# NOTE: commit lockfiles (uv.lock, requirements.txt); only ignore the env dirs.
+.venv/
+venv/
+env/
+
+# --- Node (defensive) ---
+node_modules/
+
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# --- Git worktrees (general) ---
+.worktrees/
+
+# --- Superpowers SDD process artifacts ---
+.superpowers/

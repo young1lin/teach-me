@@ -1,0 +1,29 @@
+{
+  "name": "teach-me",
+  "version": "0.0.1",
+  "description": "Learning coach skill. Explicitly invoked (do not auto-activate).",
+  "author": {
+    "name": "young1lin"
+  },
+  "homepage": "https://github.com/young1lin/teach-me",
+  "license": "MIT",
+  "keywords": [
+    "learning",
+    "teaching",
+    "mastery"
+  ],
+  "skills": "./skills/",
+  "skillInstructions": "Kimi Code tool mapping for teach-me:\n\n- teach-me is invoked explicitly by the user (e.g. /teach-me or $teach-me). Do NOT auto-invoke it from general requests to explain/teach/summarize.\n- When teach-me asks to ask the user, present choices, or wait for input, use Kimi Code's AskUserQuestion tool (1 question, 2-4 options, recommended first). Do not render choices as plain text unless AskUserQuestion is unavailable.\n- When teach-me refers to TodoWrite, use Kimi Code's TodoList tool.\n- For read-only codebase exploration teach-me requests, use the Agent tool with subagent_type \"explore\".\n- Use Kimi Code's Read, Write, Edit, Bash, Grep, Glob, WebSearch, and MCP tools by their exposed names for the corresponding actions.",
+  "interface": {
+    "displayName": "teach-me",
+    "shortDescription": "Turn work and reading into durable understanding",
+    "longDescription": "An explicitly-invoked learning coach: debrief recent work, learn a topic to mastery, with resumable checkpoints.",
+    "developerName": "young1lin",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/young1lin/teach-me"
+  }
+}

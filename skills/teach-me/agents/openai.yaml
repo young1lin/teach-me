@@ -1,0 +1,8 @@
+interface:
+  display_name: "Teach Me"
+  short_description: "Learn from your work or a topic to mastery"
+  default_prompt: "Use $teach-me to learn a topic to verified mastery."
+# Hard gate: this skill runs only on an explicit `$teach-me` in the user's message.
+# It must never be auto-loaded or invoked from an implicit/ambient topic match.
+policy:
+  allow_implicit_invocation: false

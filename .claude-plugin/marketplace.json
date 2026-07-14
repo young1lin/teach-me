@@ -1,0 +1,17 @@
+{
+  "name": "teach-me-marketplace",
+  "owner": {
+    "name": "young1lin"
+  },
+  "plugins": [
+    {
+      "name": "teach-me",
+      "description": "Learning-coach skill (explicit /teach-me invocation)",
+      "version": "0.0.1",
+      "source": "./",
+      "author": {
+        "name": "young1lin"
+      }
+    }
+  ]
+}
