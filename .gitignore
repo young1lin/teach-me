@@ -9,6 +9,8 @@
 # --- Secrets / local environment (never commit) ---
 .env
 .env.*
+!.env.example
+!evals/.env.example
 
 # --- Python ---
 __pycache__/
@@ -37,3 +39,7 @@ Thumbs.db
 
 # --- Superpowers SDD process artifacts ---
 .superpowers/
+
+# --- teach-me eval fixtures (real captured transcripts; machine-specific,
+# large, and never vetted line-by-line — keep local, never commit) ---
+tests/fixtures/

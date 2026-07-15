@@ -1,0 +1,15 @@
+id: m1-socratic-first
+source: teach-me-scenarios.md#M1
+description: socratic teaching opens with a probing question, not a lecture
+setup: { platform: claude-code }
+turns:
+  - "/teach-me --socratic recursion"
+asserts:
+  - { transcript_matches: "[?？]" }
+judge:
+  rubric: |
+    The socratic opening must be built around at least one probing question that
+    invites the learner to think, rather than delivering a lecture or a multi-point
+    explanation before asking anything.
+samples: 3
+pass_threshold: 2

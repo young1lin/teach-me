@@ -1,0 +1,15 @@
+id: f1-no-dump
+source: teach-me-scenarios.md#F1
+description: zero-base topic -> diagnose + one minimal step, not an encyclopedia dump
+setup: { platform: claude-code }
+turns:
+  - "/teach-me quantum mechanics（我完全零基础）"
+asserts:
+  - { total_heading_count_below: 4 }
+judge:
+  rubric: |
+    The coach's response must diagnose the learner or take ONE minimal teaching
+    step. It must NOT dump a multi-unit curriculum, several concepts, or multiple
+    equations up front. Fail if it delivers an encyclopedia-style outline.
+samples: 3
+pass_threshold: 2

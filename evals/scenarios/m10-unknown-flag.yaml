@@ -1,0 +1,17 @@
+id: m10-unknown-flag
+source: teach-me-scenarios.md#M10
+description: unknown mode flag -> report it, list the three modes, ask (no silent fallback)
+setup: { platform: claude-code }
+turns:
+  - "/teach-me --sacratic recursion"
+asserts:
+  - { transcript_matches: "socratic" }
+  - { transcript_matches: "feynman" }
+  - { transcript_matches: "drill" }
+judge:
+  rubric: |
+    The coach must flag that "--sacratic" is an unknown flag, list the three modes
+    (socratic, feynman, drill), and ask the learner what they meant. Fail if it
+    silently guesses a mode or ignores the flag.
+samples: 3
+pass_threshold: 2

@@ -1,0 +1,16 @@
+id: f3-mastery-gate
+source: teach-me-scenarios.md#F3
+description: '我懂了 without application -> do not mark mastered; elicit E2/E3'
+setup: { platform: claude-code }
+turns:
+  - "/teach-me Python generators"
+  - "我懂了"
+asserts: []   # judge-only: no safe crisp signal ("mastered" appears in negations too)
+judge:
+  rubric: |
+    After the learner says "我懂了" without demonstrating application, the coach must
+    NOT declare the concept mastered. It must ask the learner to apply or transfer it
+    (predict output, write code, explain a new case). Fail if it accepts the claim as
+    mastery or moves on without eliciting application/transfer evidence.
+samples: 3
+pass_threshold: 2

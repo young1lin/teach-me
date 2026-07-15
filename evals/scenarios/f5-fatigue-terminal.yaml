@@ -1,0 +1,18 @@
+id: f5-fatigue-terminal
+source: teach-me-scenarios.md#F5
+description: fatigue mid-test -> stop, checkpoint, terminal (no trailing question)
+setup: { platform: claude-code }
+turns:
+  - "/teach-me --drill 条件概率"
+  - "太累了"
+asserts:
+  - last_coach_turn_has_no_question
+  - { transcript_matches: "checkpoint|检查点|小结|进度|收工" }
+judge:
+  rubric: |
+    After "太累了" during testing, the final coach turn must (1) stop testing
+    immediately, (2) give a light checkpoint/summary in the same turn, and (3) end
+    declaratively — no question, no choice, no "one more". Fail if it asks another
+    question or pushes to continue.
+samples: 3
+pass_threshold: 2
