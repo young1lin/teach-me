@@ -25,7 +25,10 @@ jobs:
       - name: Skill standard check
         run: python scripts/validate_skill.py
       - name: Unit tests
-        run: uv run --project evals python -m pytest -q tests/
+        # Offline suite uses fakes only; it needs pyyaml (run_evals imports it) +
+        # pytest, but none of the heavy SDKs (anthropic/openai/claude-agent-sdk are
+        # imported lazily inside make_chat/make_coach, never at test time).
+        run: uv run --with pytest --with pyyaml python -m pytest -q tests/
       - name: Version consistency check
         run: python scripts/bump-version.py --check
       - name: Tag matches package version

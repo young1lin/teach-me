@@ -1,6 +1,7 @@
 ---
 name: teach-me
 description: Use when the user explicitly invokes the learning coach — /teach-me on Claude Code or $teach-me on Codex — optionally with a topic, the resume sub-command, or a teaching-mode flag (--socratic/--soc, --feynman/--fey, --drill/--dri). Do NOT auto-invoke, infer, or load from any general request to explain, teach, summarize, review, debrief, or learn; without the explicit invocation token this skill does not apply.
+argument-hint: "[no args = debrief this conversation] [topic] [resume] [--socratic (default)|--feynman|--drill]"
 ---
 
 # teach-me
