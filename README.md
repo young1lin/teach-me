@@ -7,19 +7,19 @@
 
 English | [中文](README.zh-CN.md)
 
-A learning-coach skill for coding agents. Turn LLM-era work and reading into durable
-understanding: debrief work you just did, or learn a topic to observable mastery, with
+A learning-coach skill for coding agents. Turn LLM-era work and reading into observable
+understanding: debrief work you just did, or learn a topic to observable understanding, with
 resumable checkpoints. **Explicitly invoked** — it never auto-activates.
 
 Invoke with `/teach-me` (Claude Code / Cursor / Antigravity) or `$teach-me` (Codex /
 OpenCode).
 
-> Python 3.8+ is required for the optional Obsidian archive mirror and the dev
+> Python 3.8+ is required for the optional Obsidian archive copy/update and the dev
 > tooling (`scripts/`); the teaching skill itself runs entirely inside your agent.
 
 ## Teaching modes
 
-Pick how you want to be taught. A mode changes the teaching style only — mastery is
+Pick how you want to be taught. A mode changes the teaching style only — evidence is
 always measured the same way (explain / apply / transfer). Socratic is the default; the
 others are opt-in flags.
 
@@ -54,18 +54,17 @@ understanding.
 
 ## Your learning data
 
-Everything you master is saved as plain markdown under one root — shared by every agent
-you use, organized by topic (which project it came from is metadata inside each file):
+Everything you demonstrate is saved as plain markdown under one root. Agents that share the same OS user home share this root by default; Windows apps, WSL, SSH remotes, and dev containers may each have a different home. Use `TEACH_ME_HOME` when you need those environments to point at the same learning store. Records are organized by topic (which project they came from is metadata inside each file):
 
 ```text
-~/.teach-me/config.json            # where your root is configured
+${TEACH_ME_HOME:-~/.teach-me}/config.json  # where your root is configured
 <root>/records/<topic>/<concept>.md
 <root>/checkpoints/<topic>.md
 ```
 
 The first time a session saves anything, teach-me asks once: keep the default
-`~/.teach-me/` or name your own directory. The answer is remembered in
-`~/.teach-me/config.json` — you're never asked again. Browse or grep the records freely;
+`~/.teach-me/` (or `TEACH_ME_HOME` when set) or name your own directory. The answer is remembered in
+`${TEACH_ME_HOME:-~/.teach-me}/config.json` — you're never asked again. Browse or grep the records freely;
 they're just markdown with frontmatter (`topic`, `project`, `state`, `evidence`).
 
 There is no database and no search index — your agent's own `grep` / `Glob` / `Read` is
@@ -74,9 +73,9 @@ matches, teach-me says so — it never invents prior learning.
 
 ## Archive to Obsidian (optional)
 
-Mirror everything you've mastered into your own vault. Add an `archive` section to
-`~/.teach-me/config.json` — a configured destination is your standing consent; teach-me
-mirrors after every save, automatically:
+Copy/update everything you have demonstrated into your own vault. Add an `archive` section to
+`${TEACH_ME_HOME:-~/.teach-me}/config.json` — a configured destination is your standing consent; teach-me
+copies/updates after every save, automatically:
 
 ```json
 {

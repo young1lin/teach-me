@@ -13,10 +13,10 @@ English | [中文](CHANGELOG.zh-CN.md)
 - **The teach-me skill** — a learning coach for coding agents, explicitly invoked with
   `/teach-me` (Claude Code / Cursor / Antigravity) or `$teach-me` (Codex / OpenCode);
   never auto-activates. Two branches: debrief the work you just shipped (no topic), or
-  learn a topic to observable mastery (explain / apply / transfer), with fatigue rules,
+  learn a topic to observable understanding (explain / apply / transfer), with fatigue rules,
   consent-gated persistence, checkpoints, and `resume`.
 - **Teaching modes**: `socratic` (the no-flag default), `feynman` (`--feynman`/`--fey`),
-  `drill` (`--drill`/`--dri`) — style changes only, the mastery rubric is invariant;
+  `drill` (`--drill`/`--dri`) — style changes only, the E1/E2/E3 evidence rubric is invariant;
   mid-session switching in any language; mode persists in checkpoints. Plus repo-grounded
   exercises (predict-then-run / modify-without-peeking / spot-the-planted-bug, with
   consent + cleanup safety rules).
@@ -26,7 +26,7 @@ English | [中文](CHANGELOG.zh-CN.md)
   frontmatter metadata; checkpoints under `checkpoints/`. Recall is grep-first — no
   database and no index; if nothing matches, teach-me says so and never fabricates prior
   learning.
-- **Archive layer** (`skills/teach-me/scripts/archive.py`, Python 3.8+) — mirrors
+- **Archive layer** (`skills/teach-me/scripts/archive.py`, Python 3.8+) — copies/updates
   records to **Obsidian** (markdown into your vault). A configured destination is standing
   consent; best-effort — archiving never blocks teaching.
 - **Multi-agent packaging**: Claude Code, Codex, Cursor, Kimi, OpenCode, Pi, and the

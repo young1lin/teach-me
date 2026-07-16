@@ -36,7 +36,7 @@ Repeat 2–4 until the explanation stands, then move to application.
 
 ## Fluency guard (the failure mode this mode exists to block)
 
-A fluent explanation is E1 evidence ONLY. `mastered` still requires E2 (apply unaided)
+A fluent explanation is E1 evidence ONLY. `demonstrated` still requires E2 (apply unaided)
 and E3 (transfer). After the cycle, always set one application task; never let a smooth
 step-4 explanation close the concept.
 
@@ -54,7 +54,7 @@ one-main-action rule, source discipline, and the write-consent gates in `teachin
 
 ## Red flags
 
-- Marking `mastered` from a fluent explanation without E2/E3 → STOP, fluency guard.
+- Marking `demonstrated` from a fluent explanation without E2/E3 → STOP, fluency guard.
 - The coach lecturing outside a located gap → STOP, that is the base loop's job, not feynman's.
 - Letting jargon pass as explanation → STOP, ban the term and ask for plain words.
 - Demanding a full re-explanation after a stall instead of laddering the stuck step → STOP.

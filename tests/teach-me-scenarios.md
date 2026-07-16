@@ -5,9 +5,9 @@ Each scenario specifies its setup, user prompt or event, and required observable
 ## Trigger (discipline) — both platform tokens
 
 - **TP1** — SETUP: Claude Code. PROMPT: `/teach-me`. EXPECT: invoke `teach-me` and enter the debrief branch.
-- **TP2** — SETUP: Claude Code. PROMPT: `/teach-me conditional probability`. EXPECT: invoke `teach-me` and enter topic mastery.
+- **TP2** — SETUP: Claude Code. PROMPT: `/teach-me conditional probability`. EXPECT: invoke `teach-me` and enter topic learning.
 - **TP3** — SETUP: Codex. PROMPT: `$teach-me`. EXPECT: invoke `teach-me` and enter the debrief branch.
-- **TP4** — SETUP: Codex. PROMPT: `$teach-me conditional probability`. EXPECT: invoke `teach-me` and enter topic mastery.
+- **TP4** — SETUP: Codex. PROMPT: `$teach-me conditional probability`. EXPECT: invoke `teach-me` and enter topic learning.
 - **TN1** — PROMPT: `teach me conditional probability`. EXPECT: do not invoke `teach-me`; there is no explicit platform token.
 - **TN2** — PROMPT: `解释一下这段代码`. EXPECT: do not invoke `teach-me`.
 - **TN3** — SETUP: the repository contains a file named `teach-me.md`. EVENT: open that file. EXPECT: do not invoke `teach-me` merely because the filename contains the skill name.
@@ -17,7 +17,7 @@ Each scenario specifies its setup, user prompt or event, and required observable
 
 - **F1** — SETUP: the learner says they have zero prior knowledge. PROMPT: `/teach-me quantum mechanics`. EXPECT (GREEN): diagnose the learner and take one minimal teaching step, rather than delivering an encyclopedia-style dump.
 - **F2** — PROMPT: `/teach-me Python generators`. EXPECT (GREEN): diagnose the learner's level with at most three questions before teaching.
-- **F3** — SETUP: a concept has been explained, but the learner has supplied no application evidence. PROMPT: `我懂了`. EXPECT (GREEN): do not mark the concept mastered; elicit E2/E3 application or transfer evidence.
+- **F3** — SETUP: a concept has been explained, but the learner has supplied no application evidence. PROMPT: `我懂了`. EXPECT (GREEN): do not mark the concept demonstrated; elicit E2/E3 application or transfer evidence.
 - **F4** — SETUP: the learner gives two consecutive wrong answers on the same target. EXPECT (GREEN): change the scaffold instead of repeating the same question or prompt form.
 - **F5** — SETUP: testing is in progress. PROMPT: `太累了`. EXPECT (GREEN): stop testing immediately, give a checkpoint, and end without a final question or “one more.”
 - **F6** — SETUP: the learner is an expert database engineer. PROMPT: `/teach-me database isolation levels`. EXPECT (GREEN): skip basics and focus on edge cases, tradeoffs, and transfer.
@@ -26,15 +26,15 @@ Each scenario specifies its setup, user prompt or event, and required observable
 ## Functional (GREEN)
 
 - **G-debrief** — SETUP: a database-layer work session has just finished. PROMPT: `/teach-me`. EXPECT: present at most five tagged candidates, wait for the learner to pick, teach the selection, then print a checkpoint.
-- **G-topic** — PROMPT: `/teach-me conditional probability`. EXPECT: establish the goal and diagnose level, present a 3–7-unit concept map, teach a unit, then apply the mastery gate.
-- **G-gate** — SETUP: a concept has only E1 evidence. EXPECT: state is `unstable`, not `mastered`.
-- **G-persist** — SETUP: nothing reaches `mastered`. EXPECT: write zero files and print a checkpoint.
+- **G-topic** — PROMPT: `/teach-me conditional probability`. EXPECT: establish the goal and diagnose level, present a 3–7-unit concept map, teach a unit, then apply the E1/E2/E3 evidence gate.
+- **G-gate** — SETUP: a concept has only E1 evidence. EXPECT: state is `unstable`, not `demonstrated`.
+- **G-persist** — SETUP: nothing reaches `demonstrated`. EXPECT: write zero files and print a checkpoint.
 - **G-persist2** — SETUP: session write consent has been granted and one concept reaches E1/E2/E3. EXPECT: write exactly one concept note under `records/`.
 - **G-consent** — SETUP: the first concept in a session reaches E1/E2/E3 and no write consent exists yet. EXPECT: name the target, ask, and wait before writing; if the learner says no, write zero files for the rest of that session.
-- **G-records** — SETUP: two concepts in one topic reach `mastered` after consent. EXPECT: create two distinct `<topic>--<concept>.md` notes without overwriting either concept.
-- **G-platform** — Run three cases. With `$CODEX_HOME` set, use `$CODEX_HOME/skills/teach-me/` and `$CODEX_HOME/teach-me/records/`. Under Codex with `$CODEX_HOME` unset, use `~/.codex/skills/teach-me/` and `~/.codex/teach-me/records/`. Under Claude Code, use `CFG/skills/teach-me/` and `CFG/teach-me/records/` where `CFG` = `$CLAUDE_CONFIG_DIR` if set else `~/.claude` (e.g. `$CLAUDE_CONFIG_DIR` set → `$CLAUDE_CONFIG_DIR/teach-me/records/`).
+- **G-records** — SETUP: two concepts in one topic reach `demonstrated` after consent. EXPECT: create two distinct `records/<topic>/<concept>.md` notes without overwriting either concept.
+- **G-platform** — Run three cases. By default, use `${TEACH_ME_HOME:-~/.teach-me}/config.json` and the configured `root` for records/checkpoints across agents that share the same home. If `TEACH_ME_HOME` is set, use it for discovery; do not use per-platform record directories.
 - **G-unstable** — SETUP: a concept has only E1 evidence. PROMPT: `先到这`. EXPECT: end without pressure at an `unstable` checkpoint and write zero files.
-- **G-domain** — Run one conceptual, one procedural, one quantitative, and one argumentative topic. EXPECT: each scaffold and mastery check adapts to its domain.
+- **G-domain** — Run one conceptual, one procedural, one quantitative, and one argumentative topic. EXPECT: each scaffold and evidence check adapts to its domain.
 
 ## Teaching modes (GREEN)
 
@@ -44,7 +44,7 @@ Each scenario specifies its setup, user prompt or event, and required observable
 - **M4** — SETUP: a socratic (default) session is mid-lesson. PROMPT: `换费曼式`. EXPECT: switch to feynman immediately without a new `/teach-me` token; no re-invocation required.
 - **M5** — SETUP: socratic mode. PROMPT: `别问了，直接告诉我`. EXPECT: direct explanation now — the fatigue rule outranks the mode.
 - **M6** — SETUP: socratic mode; the learner stalls twice on the same point. EXPECT: the scaffold changes (ladder fires — structure or partial worked example); the same question is not asked a third time.
-- **M7** — SETUP: feynman mode; the learner gives a fluent step-4 explanation. EXPECT: state records E1 only; the concept is not `mastered` until E2 and E3 are observed.
+- **M7** — SETUP: feynman mode; the learner gives a fluent step-4 explanation. EXPECT: state records E1 only; the concept is not `demonstrated` until E2 and E3 are observed.
 - **M8** — SETUP: drill mode; the last rep was partially correct. EXPECT: the next rep is a sideways variation at the same difficulty, not a difficulty increase.
 - **M9** — SETUP: a checkpoint file with `mode: socratic` exists. PROMPT: `/teach-me resume <topic>`. EXPECT: socratic mode is restored; a fresh explicit flag would override it (precedence in flows.md).
 - **M10** — PROMPT: `/teach-me --sacratic recursion`. EXPECT: report the unknown flag, list the three modes, and ask — do not guess or silently fall back.
@@ -53,15 +53,15 @@ Each scenario specifies its setup, user prompt or event, and required observable
 
 ## Storage v2 (GREEN)
 
-- **S1** — SETUP: no `~/.teach-me/config.json`; a concept reaches `mastered`. EXPECT: ONE combined question — save mastered concepts? to the default `~/.teach-me/` or a custom directory? The answer is written to `~/.teach-me/config.json`; the question never recurs in this or later sessions.
+- **S1** — SETUP: no `~/.teach-me/config.json`; a concept reaches `demonstrated`. EXPECT: ONE combined question — save demonstrated concepts? to the default `~/.teach-me/` or a custom directory? The answer is written to `~/.teach-me/config.json`; the question never recurs in this or later sessions.
 - **S2** — SETUP: config.json has `"root": "D:/learning"`. EXPECT: records are written under `D:/learning/records/<topic>/`, checkpoints under `D:/learning/checkpoints/`; nothing is written to `~/.teach-me/` except config.json itself.
 - **S3** — SETUP: no config.json; the session ends with nothing saved. EXPECT: the storage question was never asked; nothing was created on disk.
 - **S4** — SETUP: no config.json; `~/.claude/teach-me/records/` holds old records. EXPECT: at init, migration is offered once; on yes, files move by frontmatter `topic:` into `records/<topic>/<concept>.md` (checkpoint files into `checkpoints/`), and the count is reported.
 - **S5** — SETUP: `records/http-retries/` exists; a debrief record about retry backoff is about to be saved. EXPECT: existing topic directories are listed first and `http-retries` is reused (no new near-duplicate topic dir); the consent question names the chosen topic.
-- **S6** — SETUP: records exist under `records/tcp/` and a checkpoint under `checkpoints/tcp.md`. EXPECT: the due-review scan reads `records/*/*.md` only; the checkpoint is never offered as a review item.
+- **S6** — SETUP: records exist under `records/tcp/` and a checkpoint under `checkpoints/tcp.md`. PROMPT: `/teach-me resume tcp`. EXPECT: resume loads the checkpoint and, before relying on prior evidence, lightly re-checks saved `demonstrated`/`retained`/`stale` concepts; checkpoints are not treated as concept records.
 - **S7** — SETUP: config.json has `archive.obsidian` with a valid vault; a record is written after consent. EXPECT: `python scripts/archive.py` runs; the record appears in the vault under `teach-me/<topic>/`; NO additional question is asked (config = consent).
 - **S8** — SETUP: config.json has no `archive` section. EXPECT: no external tool is ever touched; archive.py reports "no destinations configured" and exits 0.
-- **S9** — SETUP: the user says "save" (explicit save) with `archive.obsidian` configured. EXPECT: the checkpoint is written, then the mirror runs once; `--dry-run` would preview without writing.
+- **S9** — SETUP: the user says "save" (explicit save) with `archive.obsidian` configured. EXPECT: the checkpoint is written, then the copy/update runs once; `--dry-run` would preview without writing.
 
 ## Retrieval (GREEN)
 
@@ -116,9 +116,9 @@ These controls used fresh agents with no `teach-me` skill content. Each agent sa
 很好！小测一下：如果生成器函数里有两个 `yield`，连续调用两次 `next()` 会发生什么？
 ```
 
-**Observed verdict:** PASS for this immediate control. The response did not declare mastery; it requested a generative prediction after the learner's self-report. No E2/E3 result exists yet, so mastery still cannot be recorded.
+**Observed verdict:** PASS for this immediate control. The response did not declare demonstrated understanding; it requested a generative prediction after the learner's self-report. No E2/E3 result exists yet, so demonstrated understanding still cannot be recorded.
 
-**Design implication:** Preserve this naturally good behavior as an explicit mastery gate so it remains reliable across topics and longer sessions. The baseline does not justify inventing a “mastery-on-claim” failure.
+**Design implication:** Preserve this naturally good behavior as an explicit evidence gate so it remains reliable across topics and longer sessions. The baseline does not justify inventing a “demonstrated-on-claim” failure.
 
 ### F5 — fatigue signal
 
@@ -200,15 +200,15 @@ saw only the environment, skill name, and message. All 50 completed outputs were
 | TN2 `解释一下这段代码` | do not invoke 5/5 | invoke 5/5 | Guided reasons treated an ordinary explanation request without `$teach-me` as negative; controls inferred a teaching match. |
 | TN4 `help me learn calculus` | do not invoke 5/5 | invoke 5/5 | Guided reasons consistently cited the missing `$teach-me` token; controls matched “learn” to `teach-me`. |
 
-**GREEN verdict:** PASS. TP1 and TP3 recognized explicit invocation in 5/5 reps each. TN1, TN2,
+**Historical verdict:** PASS for this manual sample. TP1 and TP3 recognized explicit invocation in 5/5 reps each. TN1, TN2,
 and TN4 rejected implicit invocation in 5/5 reps each. The controls show why the explicit negative
 wording is material rather than redundant.
 
-## GREEN — full suite (Task 6)
+## Historical static review — not an executable full suite (Task 6)
 
 Method: five parallel read-only agents each read only the shipped skill files and judged, per scenario,
-whether the shipped text *forces* the required behavior or leaves a rationalization gap (a loophole).
-This analytic pass complements the behavioral evidence already gathered: trigger discipline was
+whether the shipped text *appeared to force* the required behavior or left a rationalization gap (a loophole).
+This was a static rules review, not an actual behavior test, and complements the behavioral evidence gathered at that time: trigger discipline was
 repeat-sampled in the Task 2 table above, and the F1–F7 RED baselines (the teaching failures this skill
 must flip) are recorded earlier in this file.
 
@@ -239,5 +239,4 @@ must flip) are recorded earlier in this file.
 - **TN4:** added an English comment in `agents/openai.yaml` documenting that
   `allow_implicit_invocation: false` scopes the skill to explicit `$teach-me` invocation only.
 
-**Full-suite verdict:** PASS after REFACTOR. Two loopholes (F6, G-domain) closed and re-verified; all
-other scenarios pass as shipped.
+**Historical static-review verdict:** PASS after REFACTOR at the time it was run. This section is retained as evidence, not as a current executable test result; current release gates must run `scripts/validate.py`, `scripts/validate_skill.py`, and `pytest -q`.

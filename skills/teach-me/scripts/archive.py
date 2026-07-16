@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""teach-me archive layer — mirror learning records to external tools.
+"""teach-me archive layer — copy/update learning records to external tools.
 
 Usage:
     python archive.py                  # config: ~/.teach-me/config.json
     python archive.py --config PATH    # explicit config (used by tests)
     python archive.py --dry-run        # print what would happen, write nothing
 
-Reads records from <root>/records/<topic>/<concept>.md and mirrors them to every
+Reads records from <root>/records/<topic>/<concept>.md and copies/updates them to every
 destination configured under config.json's "archive" section:
 
     {
@@ -17,7 +17,7 @@ destination configured under config.json's "archive" section:
     }
 
 A destination that is not configured is never touched (config = consent).
-One-way mirror: records are the single source of truth; nothing is read back.
+One-way copy/update: records are the single source of truth; nothing is read back.
 Best-effort contract: every failure degrades to a one-line note and exit code 0 —
 archiving must never block teaching.
 """
@@ -25,6 +25,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import tempfile
 from pathlib import Path
 
 DEFAULT_CONFIG = Path("~/.teach-me/config.json").expanduser()
@@ -49,10 +51,19 @@ def parse_frontmatter(text: str) -> dict:
 def load_records(root: Path) -> list[dict]:
     records = []
     records_dir = root / "records"
-    if not records_dir.is_dir():
+    try:
+        if not records_dir.is_dir():
+            return records
+        paths = sorted(records_dir.glob("*/*.md"))
+    except OSError as err:
+        print(f"archive: unreadable records root ({err}) — nothing to do")
         return records
-    for path in sorted(records_dir.glob("*/*.md")):
-        text = path.read_text(encoding="utf-8")
+    for path in paths:
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError) as err:
+            print(f"archive: skipped unreadable record {path} ({err})")
+            continue
         records.append({
             "topic": path.parent.name,
             "concept": path.stem,
@@ -60,6 +71,20 @@ def load_records(root: Path) -> list[dict]:
             "text": text,
         })
     return records
+
+
+def atomic_write_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as tmp:
+            tmp.write(text)
+        Path(tmp_name).replace(path)
+    except Exception:
+        try:
+            Path(tmp_name).unlink(missing_ok=True)
+        finally:
+            raise
 
 
 # ---------------------------------------------------------------- exporters
@@ -76,12 +101,12 @@ class Exporter:
 
     def export(self, records: list[dict], cfg: dict, root: Path,
                dry_run: bool) -> str:
-        """Idempotent mirror; returns a one-line summary."""
+        """Idempotent copy/update; returns a one-line summary."""
         raise NotImplementedError
 
 
 class ObsidianExporter(Exporter):
-    """A vault is a folder of markdown — mirroring = writing files into it.
+    """A vault is a folder of markdown — copy/update = writing files into it.
     Works with Obsidian closed; the app indexes on next open."""
 
     name = "obsidian"
@@ -99,9 +124,8 @@ class ObsidianExporter(Exporter):
         for record in records:
             dest = folder / record["topic"] / (record["concept"] + ".md")
             if not dry_run:
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                dest.write_text(record["text"], encoding="utf-8")
-        return f"{len(records)} notes mirrored to {folder}"
+                atomic_write_text(dest, record["text"])
+        return f"{len(records)} notes copied/updated to {folder}"
 
 
 EXPORTERS: list[Exporter] = [ObsidianExporter()]

@@ -1,4 +1,4 @@
-# teach-me teaching loop and mastery rubric
+# teach-me teaching loop and E1/E2/E3 evidence rubric
 
 ## Teaching modes
 
@@ -39,10 +39,10 @@ Use one main cognitive action per turn and never bundle questions.
 | Learner condition | Response contract |
 |---|---|
 | Beginner or missing base | Give a short explanation or worked example before fading support. |
-| Expert or mastered basics | Skip basics; probe edges and tradeoffs, then require an E3 transfer task before treating the concept as mastered. Expertise never waives the transfer check. |
+| Expert or demonstrated basics | Skip basics; probe edges and tradeoffs, then require an E3 transfer task before treating the concept as demonstrated. Expertise never waives the transfer check. |
 | "just tell me" | Explain directly now; defer the learner application to the next turn. |
 | Low-load diagnosis | An MCQ is allowed. |
-| Mastery check | Require a generated explanation or independent application; recognition is not generation. |
+| Evidence check | Require a generated explanation or independent application; recognition is not generation. |
 | Current or high-stakes topic | Verify first, then teach one source-safe slice rather than a complete survey. |
 
 Keep exchanges short. A teaching body is normally one to three short sentences or one compact worked
@@ -64,7 +64,7 @@ Your turn: one light application; omit only for an explicit direct-explanation r
 
 Follow the user's language, while preserving code and identifiers exactly.
 
-## Observable mastery
+## Observable understanding
 
 Track three independent kinds of evidence per concept:
 
@@ -74,12 +74,12 @@ Track three independent kinds of evidence per concept:
 | E2 apply | The learner completes a direct application unaided. |
 | E3 transfer | The learner handles a changed or novel application. |
 
-State machine: `unseen → learning → unstable → mastered`.
+State machine: `unseen → learning → unstable → demonstrated`.
 
 - `unseen`: the concept has not been engaged.
 - `learning`: work has begun, but E1 is not yet observed.
 - `unstable`: E1 exists, but E2 or E3 is missing.
-- `mastered`: E1, E2, and E3 are all observed.
+- `demonstrated`: E1, E2, and E3 are all observed in this session; durable retention still needs a later retrieval check.
 
 "I got it" (a bare self-report, in any language) cannot change state by itself.
 
@@ -94,10 +94,10 @@ light hint → narrow question → give structure → partial worked example →
 
 ## Cross-domain adaptation
 
-Identify each unit's domain first, then use ONLY the matching row's scaffold and mastery evidence.
+Identify each unit's domain first, then use ONLY the matching row's scaffold and evidence requirement.
 Do not fall back on the generic shared loop for a domain listed here.
 
-| Domain | Primary scaffold | Mastery evidence |
+| Domain | Primary scaffold | Evidence requirement |
 |---|---|---|
 | Conceptual | analogy, boundaries, counterexamples | explain, compare, spot a counterexample |
 | Procedural | demo, completion, fading steps | complete unaided |

@@ -7,19 +7,19 @@
 
 [English](README.md) | 中文
 
-给编码智能体用的学习教练 skill。把 AI 时代的工作和阅读变成真正长在自己身上的理解：
-复盘刚交付的工作，或把一个主题学到可观测的掌握程度，配套可恢复的检查点。
+给编码智能体用的学习教练 skill。把 AI 时代的工作和阅读变成可观测的理解：
+复盘刚交付的工作，或把一个主题学到可观测的理解程度，配套可恢复的检查点。
 **只能显式调用** —— 绝不自动触发。
 
 调用方式：`/teach-me`（Claude Code / Cursor / Antigravity）或 `$teach-me`（Codex /
 OpenCode）。
 
-> 可选的 Obsidian 归档镜像和开发工具（`scripts/`）需要 Python 3.8+；
+> 可选的 Obsidian 归档复制/更新和开发工具（`scripts/`）需要 Python 3.8+；
 > 教学 skill 本体完全运行在你的智能体内部，无需 Python。
 
 ## 教学模式
 
-选择你想要的被教方式。模式只改变教学风格 —— 掌握程度的衡量方式永远不变
+选择你想要的被教方式。模式只改变教学风格 —— 证据衡量方式永远不变
 （能讲清 / 能应用 / 能迁移）。苏格拉底是默认模式，其余是可选旗标。
 
 | 模式 | Flag（简写） | 风格 |
@@ -52,17 +52,16 @@ $teach-me --dri 正则                  # Codex / OpenCode
 
 ## 你的学习数据
 
-所有掌握的内容都以纯 markdown 保存在同一个根目录下 —— 跨智能体共享，按主题（topic）
-分目录组织，来源项目作为每个文件内的元数据：
+所有已 demonstrated（本会话通过讲清/应用/迁移证据）的内容都以纯 markdown 保存在同一个根目录下。共享同一个 OS 用户 home 的智能体默认共享这份记录；Windows 应用、WSL、SSH 远程机和 Dev Container 可能各有不同 home。如需跨环境共享，请设置 `TEACH_ME_HOME` 指向同一个学习目录。记录按主题（topic）分目录组织，来源项目作为每个文件内的元数据：
 
 ```text
-~/.teach-me/config.json            # 根目录配置在这里
+${TEACH_ME_HOME:-~/.teach-me}/config.json  # 根目录配置在这里
 <root>/records/<topic>/<concept>.md
 <root>/checkpoints/<topic>.md
 ```
 
-会话第一次需要保存时，teach-me 只问一次：用默认的 `~/.teach-me/` 还是你指定的目录。
-答案记入 `~/.teach-me/config.json`，之后不再询问。记录就是带 frontmatter 的 markdown
+会话第一次需要保存时，teach-me 只问一次：用默认的 `~/.teach-me/`（或已设置的 `TEACH_ME_HOME`）还是你指定的目录。
+答案记入 `${TEACH_ME_HOME:-~/.teach-me}/config.json`，之后不再询问。记录就是带 frontmatter 的 markdown
 （`topic`、`project`、`state`、`evidence`），随意浏览或 grep。
 
 没有数据库，也没有搜索索引 —— 你的智能体自带的 `grep` / `Glob` / `Read` 就是检索引擎。
@@ -71,8 +70,8 @@ $teach-me --dri 正则                  # Codex / OpenCode
 
 ## 归档到 Obsidian（可选）
 
-把掌握的内容镜像进你自己的 vault。在 `~/.teach-me/config.json` 里加一段 `archive`
-配置 —— 配置了目的地即视为长期授权，每次保存后自动镜像：
+把已 demonstrated 的内容复制/更新进你自己的 vault。在 `${TEACH_ME_HOME:-~/.teach-me}/config.json` 里加一段 `archive`
+配置 —— 配置了目的地即视为长期授权，每次保存后自动复制/更新：
 
 ```json
 {

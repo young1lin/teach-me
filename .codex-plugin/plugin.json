@@ -1,7 +1,7 @@
 {
   "name": "teach-me",
   "version": "0.0.1",
-  "description": "Learning coach: turn LLM-era work and reading into durable understanding. Explicitly invoked via $teach-me (Codex) or /teach-me (Claude Code).",
+  "description": "Learning coach: turn LLM-era work and reading into observable understanding. Explicitly invoked via $teach-me (Codex) or /teach-me (Claude Code).",
   "author": {
     "name": "young1lin",
     "url": "https://github.com/young1lin"
@@ -13,14 +13,13 @@
     "learning",
     "teaching",
     "debrief",
-    "mastery"
+    "understanding"
   ],
   "skills": "./skills/",
-  "hooks": {},
   "interface": {
     "displayName": "teach-me",
-    "shortDescription": "Turn work and reading into durable understanding",
-    "longDescription": "An explicitly-invoked learning coach. Run $teach-me to debrief work you just did, or $teach-me <topic> to learn a subject to observable mastery. Includes resumable checkpoints.",
+    "shortDescription": "Turn work and reading into observable understanding",
+    "longDescription": "An explicitly-invoked learning coach. Run $teach-me to debrief work you just did, or $teach-me <topic> to learn a subject to observable understanding. Includes resumable checkpoints.",
     "developerName": "young1lin",
     "category": "Education",
     "capabilities": [

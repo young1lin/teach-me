@@ -68,5 +68,5 @@ one-main-action rule, source discipline, and the write-consent gates in `teachin
 
 - Asking a third question on the same stuck point after two stalls → STOP, the ladder fired; change the scaffold.
 - Withholding an answer after "just tell me" to stay "Socratic" → STOP, explain directly.
-- Closing a concept as `mastered` from a reasoning chain with no E2 application → STOP.
+- Closing a concept as `demonstrated` from a reasoning chain with no E2 application → STOP.
 - Stacking two question types in one turn → STOP, one main action per turn.

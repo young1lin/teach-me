@@ -2,9 +2,9 @@
 
 ## Storage discovery (do this first, every run)
 
-- The fixed discovery point is `~/.teach-me/config.json` — the same file on every agent
-  (Claude Code, Codex, Cursor, ...), so one person's learning history is never split per
-  agent. Resolve `~` to the OS home dir (Windows → `C:\Users\<user>\...`). Minimum content:
+- The default discovery point is `${TEACH_ME_HOME:-~/.teach-me}/config.json` — the same file on every agent
+  (Claude Code, Codex, Cursor, ...), so one person's learning history can be shared by agents that use the same OS user
+  home. WSL, containers, SSH hosts, and remote IDEs can each have a different home. Resolve `~` to the OS home dir (Windows → `C:\Users\<user>\...`). Minimum content:
 
       { "root": "~/.teach-me" }
 
@@ -14,8 +14,8 @@
 - config.json missing → the store is unconfigured: read nothing and create nothing until a
   write is needed. Ask about storage only at the session's FIRST write, folded into the
   first-write consent gate as ONE question: whether to save AND where — the default
-  `~/.teach-me/` or a directory the user names. Write the answer to
-  `~/.teach-me/config.json`, then proceed. Sessions that never save are never asked.
+  `~/.teach-me/` (or `TEACH_ME_HOME` when set) or a directory the user names. Write the answer to
+  `${TEACH_ME_HOME:-~/.teach-me}/config.json`, then proceed. Sessions that never save are never asked.
 - **Legacy migration (once, when creating config.json):** check the old stores
   `~/.claude/teach-me/records/`, `$CODEX_HOME/teach-me/records/`, `~/.codex/teach-me/records/`.
   If any holds records, offer once to migrate. The mapping is mechanical (old frontmatter
@@ -51,24 +51,44 @@
     concepts: [ {name, deps, state, E1, E2, E3} ]
     misconceptions, current_scaffold, fatigue_signals, next_step
 
+
+## Learning-state vocabulary
+
+- `unseen`: not yet diagnosed.
+- `learning`: being taught, no complete evidence set yet.
+- `unstable`: can explain part of it, but apply/transfer evidence is missing or weak.
+- `demonstrated`: passed E1/E2/E3 in the current session. This is current-session evidence, not durable retention.
+- `retained`: passed a delayed retrieval check in a later session.
+- `stale`: previously demonstrated/retained, but due for re-check before relying on it.
+
+Do not call a concept retained from same-session E1/E2/E3 alone; describe it as
+`demonstrated` until a later retrieval check supports `retained`.
+
 ## Write rules (session-consented milestones)
 
-- A concept that reached `mastered` (E1+E2+E3) is eligible for one concept note after session consent.
-- Write nothing for unseen/learning/unstable items — no data pile. Mastery is NOT required to end a
+- A concept that reached `demonstrated` (E1+E2+E3 in this session) is eligible for one concept note after session consent.
+- Write nothing for unseen/learning/unstable items — no data pile. Demonstrated understanding is NOT required to end a
   session; stopping at `unstable` writes nothing but the checkpoint.
 - **First-write consent gate (AUTO milestone writes):** the FIRST time in a session an automatic
-  milestone write would happen (a concept just reached `mastered`), name the target path, ask whether
-  to save mastered concepts, and WAIT. If `~/.teach-me/config.json` does not exist yet, the same
+  milestone write would happen (a concept just reached `demonstrated`), name the target path, ask whether
+  to save demonstrated concepts, and WAIT. If `${TEACH_ME_HOME:-~/.teach-me}/config.json` does not exist yet, the same
   single question also asks WHERE: the default `~/.teach-me/` or a custom directory (see Storage
-  discovery) — never two separate questions. Yes applies to later mastered concepts this session. No
+  discovery) — never two separate questions. Yes applies to later demonstrated concepts this session. No
   keeps the session free of AUTO writes; do not ask again that session.
 - **An explicit user "save" / "save progress" command grants consent by itself.** Write immediately —
   no ask-and-wait gate — even if it is the session's first write, and even if the user earlier declined
   the AUTO gate (an explicit save overrides an earlier "No"). Exception: if config.json is missing, a
   root is still needed — ask only the where-half (default `~/.teach-me/` or custom), then write. It
   writes the current topic's full state to a checkpoint file (see the Checkpoint section), not only
-  the mastered concept notes.
+  the demonstrated concept notes.
 - User may target the project (`<project>/.teach-me/records/`) instead of the global store.
+
+## Privacy and redaction
+
+Before saving a debrief or checkpoint outside the project, abstract the lesson and remove raw secrets,
+tokens, internal domains, customer names, private source code, and business-sensitive details unless
+the user explicitly asks to keep a specific item. On the first write of a session, show the short
+summary that will be saved as part of the consent prompt so the user can correct or reject it.
 
 ## Record file template (dates are placeholders — compute at write time, never copy literals)
 
@@ -78,10 +98,10 @@
     project: <cwd-basename>       # cwd basename (debrief) or "-" (topic)
     topic: <topic-slug>
     concept: <concept-slug>
-    state: mastered
+    state: demonstrated
     evidence: {E1: passed, E2: passed, E3: passed}
     ---
-    ## What was mastered
+    ## What was demonstrated
     ## Key misconception fixed
     ## Transfer task passed
     ## Review question (self-test prompt)
@@ -97,7 +117,7 @@ saved checkpoint goes to `<root>/checkpoints/<topic-slug>.md` (topic branch) or
     ## Learning checkpoint
     Topic:        <topic or "session debrief">
     Goal:         <observable goal>
-    Mastered:     <concepts with E1/E2/E3>
+    Demonstrated: <concepts with E1/E2/E3 this session>
     Unstable:     <can explain, missing apply/transfer>
     Key misconception: <if any>
     Evidence:     <what was observed>
@@ -112,13 +132,13 @@ it, followed by the printed block above:
     topic: <topic-slug or "-" for a no-topic debrief>
     mode: <socratic | feynman | drill>
     goal: <observable goal>
-    concepts: [ {name, deps, state, E1, E2, E3} ]   # full per-concept evidence, not only mastered ones
+    concepts: [ {name, deps, state, E1, E2, E3} ]   # full per-concept evidence, not only demonstrated ones
     misconception: <if any>
     next_step: <one action>
     ---
     (the printed Learning checkpoint block above)
 
-`resume` loads this file, then re-checks concepts whose saved state was `mastered` or `unstable` for
+`resume` loads this file, then re-checks concepts whose saved state was `demonstrated`, `retained`, `stale`, or `unstable` for
 decay BEFORE continuing (flows.md); it re-teaches only the evidence that now fails. It also restores
 the saved `mode:` unless the user chose a mode explicitly this session (precedence in flows.md).
 
@@ -127,15 +147,15 @@ the saved `mode:` unless the user chose a mode explicitly this session (preceden
 There is no database and no search index. To recall prior work — a `resume` with a fuzzy
 name, or "have I learned X?" — run `grep -ri "<query>" records/` over filenames and body,
 or `Glob records/<topic>/*.md`. Cap at ~5 records; read only what the turn needs. Retrieved
-mastery is STALE evidence: lightly re-check it before relying on the saved state, and never
+understanding is STALE evidence: lightly re-check it before relying on the saved state, and never
 let retrieval override saved E1/E2/E3. If grep finds nothing, SAY SO — do not fabricate
 prior learning. A configured archive destination (below) is never read back; `records/`
 stays the single source of truth.
 
-## Archive (opt-in mirror to Obsidian)
+## Archive (opt-in copy/update to Obsidian)
 
 - config.json may carry an `archive` section. **A configured destination is standing
-  consent** — mirror it WITHOUT asking. No `archive` section → external apps are never
+  consent** — copy/update it WITHOUT asking. No `archive` section → external apps are never
   touched, ever.
 
       {
@@ -147,9 +167,9 @@ stays the single source of truth.
 
 - After a record write or an explicit save completes, run
   `python scripts/archive.py` (path relative to this skill's directory; add
-  `--dry-run` to preview). It mirrors `records/` one-way: records stay the single source
+  `--dry-run` to preview). It copies/updates `records/` one-way: records stay the single source
   of truth; the archive is never read back.
-- Obsidian = markdown written into `vault_path/folder/<topic>/<concept>.md` (a vault is
+- Obsidian = markdown copied/updated into `vault_path/folder/<topic>/<concept>.md` (a vault is
   a folder; works with the app closed).
 - **Best-effort (hard rule):** missing Python or a bad vault path is a one-line note and
   nothing more — archiving never blocks or delays teaching, never retries in a loop, and

@@ -7,8 +7,8 @@ Every flow MUST follow the teaching loop, one-main-action rule, fatigue rules, a
 When printing an invocation hint, substitute the literal active-platform token: `/teach-me` on Claude
 Code or `$teach-me` on Codex. Never print a token placeholder literally.
 
-The user may stop any flow — a stop or fatigue signal always wins, and mastery is never mandatory in
-one session. A mastered concept becomes eligible for persistence only after the session-consent gate
+The user may stop any flow — a stop or fatigue signal always wins, and demonstrated understanding is never mandatory in
+one session. A demonstrated concept becomes eligible for persistence only after the session-consent gate
 in `state.md`.
 
 ## Teaching-mode composition
@@ -32,10 +32,10 @@ not an invocation.
    candidates remain on offer for the user to choose later.
 4. Teach only the selected candidates through `teaching.md`, subject to the stop and fatigue rules
    above.
-5. End using the checkpoint procedure in `state.md`. Persist eligible mastered concepts only after
+5. End using the checkpoint procedure in `state.md`. Persist eligible demonstrated concepts only after
    session consent.
 
-## Branch B — topic mastery (topic present)
+## Branch B — topic learning (topic present)
 
 1. State one observable learning goal. Ask progressive diagnostic questions only while the relevant
    level remains unclear: no more than three total and one per turn when needed. Stop as soon as the
@@ -44,15 +44,15 @@ not an invocation.
 2. Once the level is clear, show a map of three to seven core units and their dependencies, ordered
    from foundation through mechanism, common misconception, application, and transfer. Expand only
    the current unit; do not pre-generate a textbook.
-3. Teach one unit at a time through `teaching.md`. Use its E1/E2/E3 evidence to gate `mastered`;
+3. Teach one unit at a time through `teaching.md`. Use its E1/E2/E3 evidence to gate `demonstrated`;
    `unstable` is a valid stopping point that can be resumed later.
-4. End using the checkpoint procedure in `state.md`. Persist eligible mastered concepts only after
+4. End using the checkpoint procedure in `state.md`. Persist eligible demonstrated concepts only after
    session consent.
 
 ## resume
 
 Load the requested checkpoint through `state.md` and re-check likely decay before continuing. Re-teach
-only failed evidence; never assume earlier mastery survived.
+only failed evidence; never assume earlier evidence survived.
 
 If no checkpoint exists in `<root>/checkpoints/` but concept notes for the topic do
 (`<root>/records/<topic>/`), load their
