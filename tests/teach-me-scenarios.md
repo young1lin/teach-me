@@ -239,4 +239,4 @@ must flip) are recorded earlier in this file.
 - **TN4:** added an English comment in `agents/openai.yaml` documenting that
   `allow_implicit_invocation: false` scopes the skill to explicit `$teach-me` invocation only.
 
-**Historical static-review verdict:** PASS after REFACTOR at the time it was run. This section is retained as evidence, not as a current executable test result; current release gates must run `scripts/validate.py`, `scripts/validate_skill.py`, and `pytest -q`.
+**Historical static-review verdict:** PASS after REFACTOR at the time it was run. This section is retained as evidence, not as a current executable test result; current release gates must run `scripts/validate.py`, `scripts/validate_skill.py`, and `uv run --with pytest pytest -q`.

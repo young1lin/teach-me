@@ -6,7 +6,7 @@ Run this checklist before publishing a public teach-me release.
 
 - [ ] `python scripts/validate.py` passes.
 - [ ] `python scripts/validate_skill.py` passes.
-- [ ] `pytest -q` passes.
+- [ ] `uv run --with pytest pytest -q` passes.
 - [ ] `python scripts/bump-version.py --check` passes.
 - [ ] Release tags use `v<package.json version>` and pass the workflow tag check.
 

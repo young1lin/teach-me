@@ -30,6 +30,6 @@
   `.agents/` 标准（`npx skills add`）。
 - **工具链与测试**：`scripts/validate.py` 打包门禁与 `scripts/validate_skill.py`
   SKILL 标准门禁、`scripts/bump-version.py` 单源版本管理、发布工作流（PR 时校验，
-  `v*` tag 时发布）、行为场景，以及归档层的 pytest 测试套件。
+  `v*` tag 时发布）、行为场景，以及归档层/存储层的 pytest 测试套件。
 
 [0.0.1]: https://github.com/young1lin/teach-me/releases/tag/v0.0.1

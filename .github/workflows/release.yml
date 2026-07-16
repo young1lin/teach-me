@@ -19,12 +19,13 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.x"
+      - uses: astral-sh/setup-uv@v6
       - name: Packaging acceptance check
         run: python scripts/validate.py
       - name: Skill standard check
         run: python scripts/validate_skill.py
       - name: Unit tests
-        run: pytest -q
+        run: uv run --with pytest pytest -q
       - name: Version consistency check
         run: python scripts/bump-version.py --check
       - name: Tag matches package version

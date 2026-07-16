@@ -155,7 +155,7 @@ npx skills add young1lin/teach-me
 - `skills/teach-me/` —— skill 本体（`SKILL.md`、`references/`、`agents/`、`scripts/`）。
 - `.<agent>-plugin/`、`.agents/`、`.opencode/`、`package.json` —— 各平台打包清单。
 - `scripts/` —— `validate.py`（打包）与 `validate_skill.py`（SKILL 标准）两道校验。
-- `tests/` —— 行为场景 + 归档层的 pytest 测试。
+- `tests/` —— 行为场景 + 归档层和存储层的 pytest 测试（用 `uv run --with pytest pytest -q` 运行）。
 
 ## 许可证
 

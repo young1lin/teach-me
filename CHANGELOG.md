@@ -34,6 +34,6 @@ English | [中文](CHANGELOG.zh-CN.md)
 - **Tooling & tests**: `scripts/validate.py` packaging gate and
   `scripts/validate_skill.py` SKILL-standard gate, `scripts/bump-version.py`
   single-source versioning, release workflow (validate on PR, release on `v*` tag),
-  behavior scenarios, and a pytest suite for the archive layer.
+  behavior scenarios, and pytest suites for the archive/store layers.
 
 [0.0.1]: https://github.com/young1lin/teach-me/releases/tag/v0.0.1

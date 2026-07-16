@@ -162,7 +162,7 @@ OpenCode, and 70+ others).
 - `skills/teach-me/` — the skill (`SKILL.md`, `references/`, `agents/`, `scripts/`).
 - `.<agent>-plugin/`, `.agents/`, `.opencode/`, `package.json` — per-agent packaging.
 - `scripts/` — `validate.py` (packaging) and `validate_skill.py` (SKILL-standard) gates.
-- `tests/` — behavior scenarios + pytest suite for the archive layer.
+- `tests/` — behavior scenarios + pytest suites for the archive and store layers (run with `uv run --with pytest pytest -q`).
 
 ## License
 
