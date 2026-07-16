@@ -25,7 +25,7 @@ jobs:
       - name: Skill standard check
         run: python scripts/validate_skill.py
       - name: Unit tests
-        run: uv run --with pytest pytest -q
+        run: uv run --project evals python -m pytest -q tests/
       - name: Version consistency check
         run: python scripts/bump-version.py --check
       - name: Tag matches package version
