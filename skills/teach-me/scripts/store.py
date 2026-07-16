@@ -27,6 +27,9 @@ DEFAULT_HOME = Path("~/.teach-me").expanduser()
 CONFIG_NAME = "config.json"
 SLUG_KEEP_RE = re.compile(r"[^\w.-]+", re.UNICODE)
 EDGE_RE = re.compile(r"^[._-]+|[._-]+$")
+DATED_RECORD_RE = re.compile(r"^\d{4}-\d{2}-\d{2}-(?P<concept>.+)$")
+DEFAULT_LOCK_TIMEOUT_S = 10.0
+DEFAULT_STALE_LOCK_S = 30 * 60
 
 
 def teach_home() -> Path:
@@ -56,9 +59,19 @@ def root_from_config(cfg: dict) -> Path:
 
 
 def init_store(root: str | None = None, path: Path | None = None) -> dict:
+    """Initialize or update config without dropping existing archive/custom fields."""
     path = path or config_path()
-    selected = Path(root).expanduser() if root else teach_home()
-    cfg = {"root": str(selected), "schema_version": SCHEMA_VERSION}
+    cfg: dict = {}
+    if path.exists():
+        with path.open(encoding="utf-8") as f:
+            existing = json.load(f)
+        if not isinstance(existing, dict):
+            raise ValueError(f"config must be an object: {path}")
+        cfg.update(existing)
+    if root is not None or "root" not in cfg:
+        selected = Path(root).expanduser() if root else teach_home()
+        cfg["root"] = str(selected)
+    cfg["schema_version"] = SCHEMA_VERSION
     atomic_write_json(path, cfg)
     return cfg
 
@@ -92,18 +105,42 @@ def atomic_write_json(path: Path, data: dict) -> None:
     atomic_write_text(path, json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
 
 
+def _lock_is_stale(path: Path, stale_after: float) -> bool:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        created = float(payload.get("created", 0))
+    except Exception:
+        try:
+            created = path.stat().st_mtime
+        except OSError:
+            return False
+    return time.time() - created > stale_after
+
+
 @contextlib.contextmanager
-def file_lock(path: Path, timeout: float = 10.0) -> Iterator[None]:
-    """Coarse cross-process lock using exclusive lock-file creation."""
+def file_lock(
+    path: Path,
+    timeout: float = DEFAULT_LOCK_TIMEOUT_S,
+    stale_after: float = DEFAULT_STALE_LOCK_S,
+) -> Iterator[None]:
+    """Coarse cross-process lock using exclusive lock-file creation.
+
+    Stale lock files are removed after `stale_after` seconds so a crashed writer
+    does not permanently prevent future saves.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     deadline = time.monotonic() + timeout
     fd: int | None = None
     while True:
         try:
             fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-            os.write(fd, str(os.getpid()).encode("ascii"))
+            payload = json.dumps({"pid": os.getpid(), "created": time.time()})
+            os.write(fd, payload.encode("utf-8"))
             break
         except FileExistsError:
+            if _lock_is_stale(path, stale_after):
+                path.unlink(missing_ok=True)
+                continue
             if time.monotonic() >= deadline:
                 raise TimeoutError(f"timed out waiting for lock: {path}")
             time.sleep(0.05)
@@ -124,6 +161,35 @@ def frontmatter(data: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def parse_frontmatter(text: str) -> dict:
+    if not text.startswith("---"):
+        return {}
+    fm: dict = {}
+    for line in text.split("\n")[1:]:
+        if line.strip() == "---":
+            break
+        if ":" not in line or line.startswith((" ", "\t")):
+            continue
+        key, _, value = line.partition(":")
+        raw = value.strip()
+        try:
+            fm[key.strip()] = json.loads(raw)
+        except json.JSONDecodeError:
+            fm[key.strip()] = raw.split("#", 1)[0].strip().strip('"')
+    return fm
+
+
+def frontmatter_from_file(path: Path) -> dict:
+    try:
+        return parse_frontmatter(path.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, OSError):
+        return {}
+
+
+def frontmatter_date(path: Path) -> str:
+    return str(frontmatter_from_file(path).get("date", ""))
+
+
 def read_body_arg(value: str) -> str:
     if value == "-":
         return sys.stdin.read()
@@ -137,7 +203,11 @@ def record_path(root: Path, topic: str, concept: str) -> Path:
     return root / "records" / slugify(topic) / f"{slugify(concept)}.md"
 
 
-def checkpoint_path(root: Path, topic: str) -> Path:
+def checkpoint_path(root: Path, topic: str, date: str | None = None, project: str | None = None) -> Path:
+    if topic == "-":
+        checkpoint_date = date or dt.date.today().isoformat()
+        project_slug = slugify(project or "session")
+        return root / "checkpoints" / f"{checkpoint_date}-{project_slug}.md"
     return root / "checkpoints" / f"{slugify(topic)}.md"
 
 
@@ -166,12 +236,14 @@ def save_record(args: argparse.Namespace) -> Path:
 def save_checkpoint(args: argparse.Namespace) -> Path:
     cfg = load_config(args.config)
     root = root_from_config(cfg)
-    path = checkpoint_path(root, args.topic)
+    date = args.date or dt.date.today().isoformat()
+    path = checkpoint_path(root, args.topic, date=date, project=args.project)
     fm = {
         "schema_version": SCHEMA_VERSION,
         "kind": "checkpoint",
-        "date": args.date or dt.date.today().isoformat(),
-        "topic": slugify(args.topic),
+        "date": date,
+        "topic": slugify(args.topic) if args.topic != "-" else "-",
+        "project": args.project,
         "mode": args.mode,
         "goal": args.goal,
         "concepts": json.loads(args.concepts_json),
@@ -192,17 +264,48 @@ def list_topics(args: argparse.Namespace) -> list[str]:
     return sorted(p.name for p in records.iterdir() if p.is_dir())
 
 
-def resume(args: argparse.Namespace) -> Path | None:
+def resume(args: argparse.Namespace) -> list[Path]:
     cfg = load_config(args.config)
     root = root_from_config(cfg)
     cp = checkpoint_path(root, args.topic)
     if cp.is_file():
-        return cp
+        return [cp]
     rec_dir = root / "records" / slugify(args.topic)
     if rec_dir.is_dir():
-        records = sorted(rec_dir.glob("*.md"))
-        return records[0] if records else None
-    return None
+        return sorted(rec_dir.glob("*.md"))
+    return []
+
+
+def destination_for_legacy(root: Path, old: Path) -> Path:
+    name = old.stem
+    if old.name.endswith("--checkpoint.md"):
+        return root / "checkpoints" / old.name.replace("--checkpoint", "")
+
+    fm = frontmatter_from_file(old)
+    topic = str(fm.get("topic") or "").strip()
+    concept = str(fm.get("concept") or "").strip()
+
+    if "--" in name:
+        topic_from_name, _, concept_from_name = name.partition("--")
+        topic = topic or topic_from_name
+        concept = concept or concept_from_name
+    else:
+        m = DATED_RECORD_RE.match(name)
+        if m:
+            concept = concept or m.group("concept")
+        else:
+            concept = concept or name
+        topic = topic or "legacy"
+
+    return root / "records" / slugify(topic) / f"{slugify(concept)}.md"
+
+
+def copy_if_newer(src: Path, dest: Path) -> bool:
+    if dest.exists() and frontmatter_date(dest) >= frontmatter_date(src):
+        return False
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src, dest)
+    return True
 
 
 def migrate(args: argparse.Namespace) -> int:
@@ -214,17 +317,8 @@ def migrate(args: argparse.Namespace) -> int:
         if not src.is_dir():
             continue
         for old in sorted(src.rglob("*.md")):
-            if old.name.endswith("--checkpoint.md"):
-                dest = root / "checkpoints" / old.name.replace("--checkpoint", "")
-            else:
-                name = old.stem
-                topic, _, concept = name.partition("--")
-                if not concept:
-                    topic, concept = "legacy", name
-                dest = root / "records" / slugify(topic) / f"{slugify(concept)}.md"
-            if not dest.exists():
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(old, dest)
+            dest = destination_for_legacy(root, old)
+            if copy_if_newer(old, dest):
                 moved += 1
     return moved
 
@@ -259,6 +353,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--concepts-json", default="[]")
     p.add_argument("--misconception", default="")
     p.add_argument("--next-step", default="")
+    p.add_argument("--project", default="-")
     p.add_argument("--date")
 
     p = sub.add_parser("resume")
@@ -272,23 +367,27 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    if args.cmd == "init":
-        cfg = init_store(args.root, args.config)
-        print(json.dumps(cfg, ensure_ascii=False, sort_keys=True))
-    elif args.cmd == "list-topics":
-        print("\n".join(list_topics(args)))
-    elif args.cmd == "save-record":
-        print(save_record(args))
-    elif args.cmd == "save-checkpoint":
-        print(save_checkpoint(args))
-    elif args.cmd == "resume":
-        found = resume(args)
-        if found is None:
-            print("not found")
-            return 1
-        print(found)
-    elif args.cmd == "migrate":
-        print(migrate(args))
+    try:
+        if args.cmd == "init":
+            cfg = init_store(args.root, args.config)
+            print(json.dumps(cfg, ensure_ascii=False, sort_keys=True))
+        elif args.cmd == "list-topics":
+            print("\n".join(list_topics(args)))
+        elif args.cmd == "save-record":
+            print(save_record(args))
+        elif args.cmd == "save-checkpoint":
+            print(save_checkpoint(args))
+        elif args.cmd == "resume":
+            found = resume(args)
+            if not found:
+                print("not found")
+                return 1
+            print("\n".join(str(path) for path in found))
+        elif args.cmd == "migrate":
+            print(migrate(args))
+    except Exception as err:
+        print(f"store: failed ({err})", file=sys.stderr)
+        return 1
     return 0
 
 

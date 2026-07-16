@@ -52,6 +52,19 @@ def test_missing_config_is_noop(tmp_path):
     assert archive.main(["--config", str(tmp_path / "absent.json")]) == 0
 
 
+def test_default_config_honors_teach_me_home(monkeypatch, tmp_path):
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    root, config = make_store(tmp_path, {"obsidian": {"vault_path": str(vault)}})
+    home = tmp_path / "home"
+    home.mkdir()
+    target = home / "config.json"
+    target.write_text(config.read_text(encoding="utf-8"), encoding="utf-8")
+    monkeypatch.setenv("TEACH_ME_HOME", str(home))
+    assert archive.main([]) == 0
+    assert (vault / "teach-me" / "tcp" / "congestion-window.md").is_file()
+
+
 def test_no_archive_section_is_noop(tmp_path):
     config = tmp_path / "config.json"
     config.write_text(json.dumps({"root": str(tmp_path)}), encoding="utf-8")

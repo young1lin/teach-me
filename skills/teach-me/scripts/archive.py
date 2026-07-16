@@ -2,7 +2,7 @@
 """teach-me archive layer — copy/update learning records to external tools.
 
 Usage:
-    python archive.py                  # config: ~/.teach-me/config.json
+    python archive.py                  # config: ${TEACH_ME_HOME:-~/.teach-me}/config.json
     python archive.py --config PATH    # explicit config (used by tests)
     python archive.py --dry-run        # print what would happen, write nothing
 
@@ -29,7 +29,13 @@ import os
 import tempfile
 from pathlib import Path
 
-DEFAULT_CONFIG = Path("~/.teach-me/config.json").expanduser()
+DEFAULT_HOME = Path("~/.teach-me").expanduser()
+CONFIG_NAME = "config.json"
+
+
+def default_config() -> Path:
+    raw = os.environ.get("TEACH_ME_HOME") or str(DEFAULT_HOME)
+    return Path(raw).expanduser() / CONFIG_NAME
 
 
 # ------------------------------------------------------------------ records
@@ -135,17 +141,19 @@ EXPORTERS: list[Exporter] = [ObsidianExporter()]
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG,
-                        help="config.json path (default: ~/.teach-me/config.json)")
+    parser.add_argument("--config", type=Path,
+                        help="config.json path (default: ${TEACH_ME_HOME:-~/.teach-me}/config.json)")
     parser.add_argument("--dry-run", action="store_true",
                         help="print what would happen; write nothing")
     args = parser.parse_args(argv)
 
-    if not args.config.is_file():
+    config = args.config or default_config()
+
+    if not config.is_file():
         print("archive: no config.json — nothing to do")
         return 0
     try:
-        cfg = json.loads(args.config.read_text(encoding="utf-8"))
+        cfg = json.loads(config.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError) as err:
         print(f"archive: unreadable config ({err}) — nothing to do")
         return 0

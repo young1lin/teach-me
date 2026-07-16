@@ -39,7 +39,10 @@ unavailable, fall back to the templates below and report that deterministic stor
 was unavailable.
 
 Supported operations: `init`, `list-topics`, `save-record`, `save-checkpoint`, `resume`,
-and `migrate`.
+and `migrate`. `init` preserves existing config sections such as `archive`; `resume` returns the
+checkpoint path when present, otherwise all concept-note paths for the topic; no-topic debrief
+checkpoints are saved as `<YYYY-MM-DD>-<project>.md`; `migrate` uses legacy frontmatter `topic:`
+for dated records and keeps the newer `date:` on collisions.
 
 ## Layout — topic is the axis, project is metadata
 
@@ -180,8 +183,8 @@ stays the single source of truth.
       }
 
 - After a record write or an explicit save completes, run
-  `python scripts/archive.py` (path relative to this skill's directory; add
-  `--dry-run` to preview). It copies/updates `records/` one-way: records stay the single source
+  `python scripts/archive.py` (path relative to this skill's directory; it discovers
+  `${TEACH_ME_HOME:-~/.teach-me}/config.json`; add `--dry-run` to preview). It copies/updates `records/` one-way: records stay the single source
   of truth; the archive is never read back.
 - Obsidian = markdown copied/updated into `vault_path/folder/<topic>/<concept>.md` (a vault is
   a folder; works with the app closed).
