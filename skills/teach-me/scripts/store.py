@@ -216,7 +216,7 @@ def save_record(args: argparse.Namespace) -> Path:
     root = root_from_config(cfg)
     topic_slug = slugify(args.topic)
     concept_slug = slugify(args.concept)
-    path = root / "records" / topic_slug / f"{concept_slug}.md"
+    path = record_path(root, args.topic, args.concept)
     fm = {
         "schema_version": SCHEMA_VERSION,
         "date": args.date or dt.date.today().isoformat(),
@@ -267,6 +267,17 @@ def list_topics(args: argparse.Namespace) -> list[str]:
 def resume(args: argparse.Namespace) -> list[Path]:
     cfg = load_config(args.config)
     root = root_from_config(cfg)
+    if args.topic == "-":
+        # No-topic debrief checkpoints are saved as <date>-<project>.md; their
+        # date/project are not known at resume time, so pick the most recent
+        # dated checkpoint rather than reconstructing a name from today's date.
+        checkpoints = root / "checkpoints"
+        if checkpoints.is_dir():
+            debriefs = sorted(p for p in checkpoints.glob("*.md")
+                              if DATED_RECORD_RE.match(p.stem))
+            if debriefs:
+                return [debriefs[-1]]
+        return []
     cp = checkpoint_path(root, args.topic)
     if cp.is_file():
         return [cp]
@@ -357,7 +368,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--date")
 
     p = sub.add_parser("resume")
-    p.add_argument("--topic", required=True)
+    p.add_argument("--topic", default="-", help="topic to resume; omit for the latest no-topic debrief")
 
     p = sub.add_parser("migrate")
     p.add_argument("legacy_root", nargs="*")

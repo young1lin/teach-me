@@ -87,6 +87,13 @@ def test_make_chat_rejects_unknown_backend():
         providers.make_chat("gemini", {})
 
 
+def test_setup_error_is_the_same_class_run_evals_catches():
+    # providers.make_chat must raise the exact SetupError run_evals imports from
+    # session, or run_evals's `except SetupError` misses it and crashes raw.
+    import session
+    assert providers.SetupError is session.SetupError
+
+
 class _FakeSDKClient:
     """Mimics ClaudeSDKClient's async context + query/receive_response."""
     def __init__(self, scripted_turns): self._scripted = list(scripted_turns); self.queries = []

@@ -16,6 +16,16 @@ def test_parse_verdict_false():
     assert v["pass"] is False
 
 
+def test_parse_verdict_ignores_brace_prose_around_json():
+    # A reasoning-heavy model can emit brace-containing prose before the verdict;
+    # first-'{'-to-last-'}' slicing would corrupt the JSON and mis-flag a pass.
+    raw = ('Checking rubric {clause 1, clause 2}... looks good.\n'
+           '{"pass": true, "evidence": "why?", "reasoning": "asked a question"}')
+    v = judge.parse_verdict(raw)
+    assert v["pass"] is True
+    assert v["evidence"] == "why?"
+
+
 def test_parse_verdict_unparseable_is_flagged_failure():
     v = judge.parse_verdict("no json at all")
     assert v["pass"] is False

@@ -108,6 +108,34 @@ def test_no_topic_debrief_checkpoint_uses_date_project_name(tmp_path):
     assert (root / "checkpoints" / "2026-07-16-teach-me-repo.md").is_file()
 
 
+def test_resume_no_topic_finds_latest_debrief_checkpoint(tmp_path):
+    config = tmp_path / "config.json"
+    root = tmp_path / "learn"
+    config.write_text(json.dumps({"root": str(root)}), encoding="utf-8")
+    for date, proj in [("2026-07-15", "teach-me"), ("2026-07-16", "other repo")]:
+        assert store.main([
+            "--config", str(config), "save-checkpoint",
+            "--topic", "-", "--project", proj, "--date", date,
+            "--goal", "Debrief", "--body", f"checkpoint {date}",
+        ]) == 0
+    # topic "-" must find the saved debrief (not reconstruct today's date/"session")
+    found = store.resume(type("Args", (), {"config": config, "topic": "-"})())
+    assert found == [root / "checkpoints" / "2026-07-16-other-repo.md"]
+
+
+def test_resume_subcommand_does_not_require_topic(tmp_path):
+    config = tmp_path / "config.json"
+    root = tmp_path / "learn"
+    config.write_text(json.dumps({"root": str(root)}), encoding="utf-8")
+    assert store.main([
+        "--config", str(config), "save-checkpoint",
+        "--topic", "-", "--project", "p", "--date", "2026-07-16",
+        "--goal", "g", "--body", "b",
+    ]) == 0
+    # `resume` with no --topic must succeed (default "-"), not argparse-error
+    assert store.main(["--config", str(config), "resume"]) == 0
+
+
 def test_migrate_uses_frontmatter_topic_for_dated_records_and_newer_collision(tmp_path):
     config = tmp_path / "config.json"
     root = tmp_path / "learn"

@@ -12,19 +12,27 @@ SYSTEM = (
 
 
 def parse_verdict(text: str) -> dict:
-    """Extract the JSON verdict from model text. Unparseable => flagged failure."""
-    start, end = text.find("{"), text.rfind("}")
-    if start == -1 or end == -1 or end < start:
-        return {"pass": False, "evidence": "",
-                "reasoning": f"unparseable judge output: {text[:120]!r}"}
-    try:
-        obj = json.loads(text[start:end + 1])
-    except json.JSONDecodeError as err:
-        return {"pass": False, "evidence": "",
-                "reasoning": f"invalid judge JSON: {err}"}
-    return {"pass": bool(obj.get("pass", False)),
-            "evidence": str(obj.get("evidence", "")),
-            "reasoning": str(obj.get("reasoning", ""))}
+    """Extract the JSON verdict from model text. Unparseable => flagged failure.
+
+    Scans each '{' and balance-decodes from there (json.raw_decode), returning the
+    first object that carries a "pass" key. This tolerates reasoning prose — even
+    brace-containing prose — before or after the verdict object, which a naive
+    first-'{'-to-last-'}' slice would turn into invalid JSON and mis-flag as a fail.
+    """
+    decoder = json.JSONDecoder()
+    for i, ch in enumerate(text):
+        if ch != "{":
+            continue
+        try:
+            obj, _ = decoder.raw_decode(text[i:])
+        except json.JSONDecodeError:
+            continue
+        if isinstance(obj, dict) and "pass" in obj:
+            return {"pass": bool(obj.get("pass", False)),
+                    "evidence": str(obj.get("evidence", "")),
+                    "reasoning": str(obj.get("reasoning", ""))}
+    return {"pass": False, "evidence": "",
+            "reasoning": f"unparseable judge output: {text[:120]!r}"}
 
 
 def judge(chat, rubric: str, judge_input: str) -> dict:

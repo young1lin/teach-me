@@ -8,9 +8,11 @@ from __future__ import annotations
 
 from typing import Protocol
 
-
-class SetupError(RuntimeError):
-    """Raised on misconfiguration (bad backend, missing env)."""
+# One SetupError, defined in session.py. run_evals.py catches session.SetupError,
+# so make_chat below must raise that same class — not a second look-alike — for
+# the "SETUP FAIL" exit-2 path to work. Re-exported here for callers/tests that
+# reference providers.SetupError.
+from session import SetupError  # noqa: E402,F401
 
 
 class ChatModel(Protocol):

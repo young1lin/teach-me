@@ -33,9 +33,13 @@ DEFAULT_HOME = Path("~/.teach-me").expanduser()
 CONFIG_NAME = "config.json"
 
 
-def default_config() -> Path:
+def default_home() -> Path:
     raw = os.environ.get("TEACH_ME_HOME") or str(DEFAULT_HOME)
-    return Path(raw).expanduser() / CONFIG_NAME
+    return Path(raw).expanduser()
+
+
+def default_config() -> Path:
+    return default_home() / CONFIG_NAME
 
 
 # ------------------------------------------------------------------ records
@@ -163,7 +167,7 @@ def main(argv=None) -> int:
         print("archive: no destinations configured — nothing to do")
         return 0
 
-    root = Path(cfg.get("root", "~/.teach-me")).expanduser()
+    root = Path(cfg["root"]).expanduser() if cfg.get("root") else default_home()
     records = load_records(root)
 
     for exporter in EXPORTERS:

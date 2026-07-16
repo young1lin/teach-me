@@ -65,6 +65,25 @@ def test_default_config_honors_teach_me_home(monkeypatch, tmp_path):
     assert (vault / "teach-me" / "tcp" / "congestion-window.md").is_file()
 
 
+def test_root_absent_falls_back_to_teach_me_home(monkeypatch, tmp_path):
+    # config without a "root" key must resolve records under TEACH_ME_HOME,
+    # not the literal ~/.teach-me — matching store.py's teach_home() resolution.
+    home = tmp_path / "home"
+    rec = home / "records" / "tcp" / "congestion-window.md"
+    rec.parent.mkdir(parents=True)
+    rec.write_text(RECORD, encoding="utf-8")
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    config = tmp_path / "config.json"
+    config.write_text(
+        json.dumps({"archive": {"obsidian": {"vault_path": str(vault)}}}),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("TEACH_ME_HOME", str(home))
+    assert archive.main(["--config", str(config)]) == 0
+    assert (vault / "teach-me" / "tcp" / "congestion-window.md").is_file()
+
+
 def test_no_archive_section_is_noop(tmp_path):
     config = tmp_path / "config.json"
     config.write_text(json.dumps({"root": str(tmp_path)}), encoding="utf-8")
