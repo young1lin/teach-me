@@ -16,6 +16,7 @@ REQUIRED_FILES = [
     "skills/teach-me/references/modes/feynman.md",
     "skills/teach-me/references/modes/drill.md",
     "skills/teach-me/scripts/archive.py",
+    "skills/teach-me/scripts/store.py",
     ".claude-plugin/plugin.json",
     ".claude-plugin/marketplace.json",
     ".codex-plugin/plugin.json",
@@ -34,6 +35,8 @@ REQUIRED_FILES = [
     "CHANGELOG.md",
     ".github/workflows/release.yml",
     "tests/test_archive.py",
+    "tests/test_store.py",
+    "docs/release-checklist.md",
 ]
 
 JSON_FILES = [p for p in REQUIRED_FILES if p.endswith(".json")]

@@ -63,7 +63,7 @@ main cognitive action per turn. Teach in the user's language; leave code and ide
 
 ## Persistence & platform
 
-State and checkpoints live in `references/state.md`. All learning data sits under one root
+State and checkpoints live in `references/state.md`; use `scripts/store.py` for deterministic writes when Python is available. All learning data sits under one root
 shared by agents on the same home — default `~/.teach-me/`, or `TEACH_ME_HOME` for WSL/container/remote setups; discovery via
 `${TEACH_ME_HOME:-~/.teach-me}/config.json`; the location is asked ONCE, at the first save. Optionally copy/update
 records to Obsidian via `python scripts/archive.py` — a configured destination in

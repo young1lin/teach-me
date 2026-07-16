@@ -14,8 +14,8 @@
 调用方式：`/teach-me`（Claude Code / Cursor / Antigravity）或 `$teach-me`（Codex /
 OpenCode）。
 
-> 可选的 Obsidian 归档复制/更新和开发工具（`scripts/`）需要 Python 3.8+；
-> 教学 skill 本体完全运行在你的智能体内部，无需 Python。
+> 确定性存储脚本、可选的 Obsidian 归档复制/更新和开发工具（`scripts/`）需要 Python 3.8+；
+> 教学 skill 本体运行在你的智能体内部。
 
 ## 教学模式
 

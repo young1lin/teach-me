@@ -27,6 +27,20 @@
   the same layout; needs no config.
 - Create `records/` and `checkpoints/` lazily, only when writing.
 
+
+## Deterministic store script
+
+Use `python scripts/store.py` (path relative to this skill directory) for low-freedom
+persistence operations whenever the runtime can execute Python. The script owns config
+discovery, slug generation, JSON-valued frontmatter serialization, atomic writes, and
+coarse lock-file protection. Do not hand-compose record/checkpoint files when the script
+is available; decide *what* to save, then pass that content to the script. If Python is
+unavailable, fall back to the templates below and report that deterministic storage tooling
+was unavailable.
+
+Supported operations: `init`, `list-topics`, `save-record`, `save-checkpoint`, `resume`,
+and `migrate`.
+
 ## Layout — topic is the axis, project is metadata
 
     <root>/

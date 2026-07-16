@@ -14,8 +14,8 @@ resumable checkpoints. **Explicitly invoked** — it never auto-activates.
 Invoke with `/teach-me` (Claude Code / Cursor / Antigravity) or `$teach-me` (Codex /
 OpenCode).
 
-> Python 3.8+ is required for the optional Obsidian archive copy/update and the dev
-> tooling (`scripts/`); the teaching skill itself runs entirely inside your agent.
+> Python 3.8+ is required for deterministic store helpers, optional Obsidian archive copy/update,
+> and the dev tooling (`scripts/`); the teaching skill itself runs inside your agent.
 
 ## Teaching modes
 
