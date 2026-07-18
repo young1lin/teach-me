@@ -39,7 +39,7 @@ unavailable, fall back to the templates below and report that deterministic stor
 was unavailable.
 
 Supported operations: `init`, `list-topics`, `save-record`, `save-checkpoint`, `resume`,
-and `migrate`. `init` preserves existing config sections such as `archive`; `resume` returns the
+`review`, `due`, and `migrate`. `init` preserves existing config sections such as `archive`; `resume` returns the
 checkpoint path when present, otherwise all concept-note paths for the topic; no-topic debrief
 checkpoints are saved as `<YYYY-MM-DD>-<project>.md`; `migrate` uses legacy frontmatter `topic:`
 for dated records and keeps the newer `date:` on collisions.
@@ -80,6 +80,24 @@ for dated records and keeps the newer `date:` on collisions.
 
 Do not call a concept retained from same-session E1/E2/E3 alone; describe it as
 `demonstrated` until a later retrieval check supports `retained`.
+
+## Spaced-repetition schedule (records carry their own review clock)
+
+Every concept record carries a Leitner schedule in frontmatter:
+
+- `deps: [<concept-slug>, ...]` — prerequisites, used only to order reviews and to flag a
+  shaky prerequisite behind a failed review.
+- `box: <1..5>` — Leitner level; `last_reviewed: <ISO date>`; `review_count: <int>`.
+- Intervals ladder: `[1, 3, 7, 21, 60]` days. A concept at `box` is **due** on
+  `last_reviewed + LADDER[box - 1]` days; the date is computed, never stored.
+- A concept enters the schedule when first written `demonstrated` (`box 1`,
+  `last_reviewed` = write date, `review_count 0`), so its first check falls due one day later.
+- Review outcomes (via `store.py review`): a pass promotes one box and sets `retained`; a fail
+  resets to box 1 and sets `stale`. `store.py due` lists concepts whose due date has passed;
+  a `demonstrated`/`retained`/`stale` record with no `last_reviewed` counts as due now.
+
+The **"Review question (self-test prompt)"** section of each record is **required** — the
+review flow uses it as the retrieval prompt.
 
 ## Write rules (session-consented milestones)
 

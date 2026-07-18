@@ -59,3 +59,17 @@ If no checkpoint exists in `<root>/checkpoints/` but concept notes for the topic
 saved state and evidence and re-check decay from those instead — an auto-saved session leaves
 concept notes, not a checkpoint file. Only if neither exists, say it was not found and offer exactly
 these routes: the user can provide a checkpoint, or begin the topic anew. Do not invent prior state.
+
+## Branch C — review (spaced repetition)
+
+`/teach-me review` runs retention checks on due concepts. The full procedure — due list, batch
+cap of 5, fatigue rules, verdict→pass/fail, fail→relearn, prerequisite hint — lives in
+`references/review.md`. Review is explicit-invocation-only and never auto-starts.
+
+## Passive due-surfacing (only inside an invoked session)
+
+At the end of an already-invoked teach-me session (any branch) and at the start of `resume`,
+run `python scripts/store.py due` and count the returned lines to see whether anything is due.
+If any are, print one line and nothing more: "N concept(s) are due for review — run
+`/teach-me review` when you want." (N is the number of lines `due` printed.) Never surface due
+items outside an invoked teach-me session, and never start review on your own.

@@ -179,6 +179,21 @@ def parse_frontmatter(text: str) -> dict:
     return fm
 
 
+def split_record(text: str) -> tuple[dict, str]:
+    """Return (frontmatter dict, body after the closing '---')."""
+    fm = parse_frontmatter(text)
+    lines = text.split("\n")
+    seen = 0
+    body_start = len(lines)
+    for i, line in enumerate(lines):
+        if line.strip() == "---":
+            seen += 1
+            if seen == 2:
+                body_start = i + 1
+                break
+    return fm, "\n".join(lines[body_start:])
+
+
 def frontmatter_from_file(path: Path) -> dict:
     try:
         return parse_frontmatter(path.read_text(encoding="utf-8"))
@@ -203,6 +218,24 @@ def record_path(root: Path, topic: str, concept: str) -> Path:
     return root / "records" / slugify(topic) / f"{slugify(concept)}.md"
 
 
+LADDER = [1, 3, 7, 21, 60]  # spaced-repetition intervals in days (Leitner boxes)
+
+
+def due_on(last_reviewed: str, box: int) -> str:
+    """ISO date a concept at 1-based `box`, last reviewed on `last_reviewed`, falls due."""
+    interval = LADDER[max(1, min(box, len(LADDER))) - 1]
+    return (dt.date.fromisoformat(last_reviewed) + dt.timedelta(days=interval)).isoformat()
+
+
+def next_box(box: int, result: str) -> int:
+    """Promote one box on a pass (capped at the top), reset to box 1 on a fail."""
+    return min(box + 1, len(LADDER)) if result == "pass" else 1
+
+
+def review_state(result: str) -> str:
+    return "retained" if result == "pass" else "stale"
+
+
 def checkpoint_path(root: Path, topic: str, date: str | None = None, project: str | None = None) -> Path:
     if topic == "-":
         checkpoint_date = date or dt.date.today().isoformat()
@@ -217,19 +250,27 @@ def save_record(args: argparse.Namespace) -> Path:
     topic_slug = slugify(args.topic)
     concept_slug = slugify(args.concept)
     path = record_path(root, args.topic, args.concept)
-    fm = {
-        "schema_version": SCHEMA_VERSION,
-        "date": args.date or dt.date.today().isoformat(),
-        "kind": args.kind,
-        "project": args.project,
-        "topic": topic_slug,
-        "concept": concept_slug,
-        "state": args.state,
-        "evidence": {"E1": args.e1, "E2": args.e2, "E3": args.e3},
-    }
-    text = frontmatter(fm) + read_body_arg(args.body).rstrip() + "\n"
+    record_date = args.date or dt.date.today().isoformat()
+    arg_deps = [d.strip() for d in args.deps.split(",") if d.strip()]
+    body = read_body_arg(args.body).rstrip() + "\n"
     with file_lock(path.with_suffix(path.suffix + ".lock")):
-        atomic_write_text(path, text)
+        existing = frontmatter_from_file(path) if path.is_file() else {}
+        deps = arg_deps or [str(d) for d in (existing.get("deps") or [])]
+        fm = {
+            "schema_version": SCHEMA_VERSION,
+            "date": record_date,
+            "kind": args.kind,
+            "project": args.project,
+            "topic": topic_slug,
+            "concept": concept_slug,
+            "state": args.state,
+            "evidence": {"E1": args.e1, "E2": args.e2, "E3": args.e3},
+            "deps": deps,
+            "box": 1,
+            "last_reviewed": record_date,
+            "review_count": int(existing.get("review_count", 0) or 0),
+        }
+        atomic_write_text(path, frontmatter(fm) + body)
     return path
 
 
@@ -254,6 +295,25 @@ def save_checkpoint(args: argparse.Namespace) -> Path:
     with file_lock(path.with_suffix(path.suffix + ".lock")):
         atomic_write_text(path, text)
     return path
+
+
+def review(args: argparse.Namespace) -> int:
+    cfg = load_config(args.config)
+    root = root_from_config(cfg)
+    path = record_path(root, args.topic, args.concept)
+    if not path.is_file():
+        print(f"store: no record for {slugify(args.topic)}/{slugify(args.concept)}", file=sys.stderr)
+        return 1
+    with file_lock(path.with_suffix(path.suffix + ".lock")):
+        fm, body = split_record(path.read_text(encoding="utf-8"))
+        box = int(fm.get("box", 1) or 1)
+        fm["box"] = next_box(box, args.result)
+        fm["state"] = review_state(args.result)
+        fm["last_reviewed"] = args.date or dt.date.today().isoformat()
+        fm["review_count"] = int(fm.get("review_count", 0) or 0) + 1
+        fm.setdefault("deps", [])
+        atomic_write_text(path, frontmatter(fm) + body)
+    return 0
 
 
 def list_topics(args: argparse.Namespace) -> list[str]:
@@ -285,6 +345,63 @@ def resume(args: argparse.Namespace) -> list[Path]:
     if rec_dir.is_dir():
         return sorted(rec_dir.glob("*.md"))
     return []
+
+
+def _due_items(root: Path, on_date: str) -> list[dict]:
+    records = root / "records"
+    items: list[dict] = []
+    if not records.is_dir():
+        return items
+    for path in sorted(records.glob("*/*.md")):
+        fm = frontmatter_from_file(path)
+        state = str(fm.get("state", ""))
+        if state not in ("demonstrated", "retained", "stale"):
+            continue
+        last = str(fm.get("last_reviewed", "")).strip()
+        box = int(fm.get("box", 1) or 1)
+        due = due_on(last, box) if last else on_date
+        if due > on_date:
+            continue
+        overdue = (dt.date.fromisoformat(on_date) - dt.date.fromisoformat(due)).days
+        items.append({
+            "path": path, "topic": path.parent.name, "concept": path.stem,
+            "state": state, "box": box,
+            "deps": [str(d) for d in (fm.get("deps") or [])],
+            "days_overdue": overdue,
+        })
+    return items
+
+
+def _order_due(items: list[dict]) -> list[dict]:
+    """Prerequisites (by concept slug) before dependents; ties by most-overdue then slug."""
+    by_concept = {it["concept"]: it for it in items}
+    ordered: list[dict] = []
+    seen: set[str] = set()
+
+    def visit(it: dict) -> None:
+        if it["concept"] in seen:
+            return
+        seen.add(it["concept"])
+        for dep in it["deps"]:
+            if dep in by_concept:
+                visit(by_concept[dep])
+        ordered.append(it)
+
+    for it in sorted(items, key=lambda x: (-x["days_overdue"], x["concept"])):
+        visit(it)
+    return ordered
+
+
+def due(args: argparse.Namespace) -> int:
+    cfg = load_config(args.config)
+    root = root_from_config(cfg)
+    on_date = args.on or dt.date.today().isoformat()
+    items = _order_due(_due_items(root, on_date))
+    if args.limit is not None:
+        items = items[: args.limit]
+    for it in items:
+        print(f"{it['topic']}\t{it['concept']}\t{it['state']}\t{it['box']}\t{it['days_overdue']}\t{it['path']}")
+    return 0
 
 
 def destination_for_legacy(root: Path, old: Path) -> Path:
@@ -355,6 +472,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--e1", default="passed")
     p.add_argument("--e2", default="passed")
     p.add_argument("--e3", default="passed")
+    p.add_argument("--deps", default="", help="comma-separated prerequisite concept slugs")
 
     p = sub.add_parser("save-checkpoint")
     p.add_argument("--topic", required=True)
@@ -369,6 +487,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("resume")
     p.add_argument("--topic", default="-", help="topic to resume; omit for the latest no-topic debrief")
+
+    p = sub.add_parser("review")
+    p.add_argument("--topic", required=True)
+    p.add_argument("--concept", required=True)
+    p.add_argument("--result", required=True, choices=["pass", "fail"])
+    p.add_argument("--date")
+
+    p = sub.add_parser("due")
+    p.add_argument("--on", help="reference date (ISO); defaults to today")
+    p.add_argument("--limit", type=int, help="cap the number of due concepts printed")
 
     p = sub.add_parser("migrate")
     p.add_argument("legacy_root", nargs="*")
@@ -394,6 +522,10 @@ def main(argv: list[str] | None = None) -> int:
                 print("not found")
                 return 1
             print("\n".join(str(path) for path in found))
+        elif args.cmd == "review":
+            return review(args)
+        elif args.cmd == "due":
+            return due(args)
         elif args.cmd == "migrate":
             print(migrate(args))
     except Exception as err:

@@ -1,7 +1,7 @@
 ---
 name: teach-me
 description: Use when the user explicitly invokes the learning coach — /teach-me on Claude Code or $teach-me on Codex — optionally with a topic, the resume sub-command, or a teaching-mode flag (--socratic/--soc, --feynman/--fey, --drill/--dri). Do NOT auto-invoke, infer, or load from any general request to explain, teach, summarize, review, debrief, or learn; without the explicit invocation token this skill does not apply.
-argument-hint: "[no args = debrief this conversation] [topic] [resume] [--socratic (default)|--feynman|--drill]"
+argument-hint: "[no args = debrief this conversation] [topic] [resume] [review] [--socratic (default)|--feynman|--drill]"
 ---
 
 # teach-me
@@ -27,6 +27,7 @@ spirit:** the user wants a deliberate command, not an assistant that starts less
 | `/teach-me` (no topic) | Work debrief → `references/flows.md` (Branch A) |
 | `/teach-me <topic>` | Topic learning → `references/flows.md` (Branch B) |
 | `/teach-me resume [topic]` | Resume procedure → `references/flows.md`; checkpoint storage + lookup → `references/state.md` |
+| `/teach-me review` | Spaced-repetition review of due concepts → `references/review.md`; scheduling → `references/state.md` |
 
 (Rows show the Claude Code token `/teach-me`; on Codex the same forms are invoked as `$teach-me …`.)
 For `resume`, `flows.md` owns the interaction procedure; `state.md` owns persistence and
@@ -90,3 +91,5 @@ fabricate prior learning.
 - A teaching mode loosening the fatigue rules or the E1/E2/E3 gate (e.g. staying in question-only mode after "just tell me", or calling a fluent Feynman explanation demonstrated) → STOP, teaching.md invariants win over any mode.
 - An archive failure (bad vault path) interrupting or delaying the lesson → STOP the archiving with a one-line note, never the lesson (best-effort rule in state.md).
 - Inventing prior learning ("you already demonstrated X") when a grep of `records/` finds nothing, instead of saying it was not found → STOP, report not-found.
+- Starting a review, or any teaching, without an explicit `/teach-me review` (or `$teach-me review`) token → STOP; review is explicit-invocation-only like every other branch.
+- Surfacing "N concepts are due" anywhere other than the end of an already-invoked teach-me session or a `resume` → STOP; never nag outside an invoked session, never auto-start review.
