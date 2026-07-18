@@ -117,7 +117,19 @@ def test_agent_sdk_coach_runs_turns_and_returns_coach_text():
     scripted = [[_Assistant2([_Text2("preamble")])],
                 [_Assistant2([_Text2("a question?")])]]
     fake = _FakeSDKClient(scripted)
-    coach = providers.AgentSDKCoach(env={}, repo="/repo", client_factory=lambda: fake)
+    coach = providers.AgentSDKCoach(env={}, repo="/repo", client_factory=lambda env: fake)
     out = coach.run(["/teach-me recursion", "我懂了"])
     assert out == ["preamble", "a question?"]
     assert fake.queries == ["/teach-me recursion", "我懂了"]
+
+
+def test_env_extra_merges_over_base_env_for_client():
+    captured = {}
+    def factory(env):
+        captured.update(env)
+        return _FakeSDKClient([[_Assistant2([_Text2("ok")])]])
+    coach = providers.AgentSDKCoach(env={"ANTHROPIC_MODEL": "deepseek"}, repo="/repo",
+                                    client_factory=factory)
+    out = coach.run(["/teach-me review"], env_extra={"TEACH_ME_HOME": "/tmp/h"})
+    assert out == ["ok"]
+    assert captured == {"ANTHROPIC_MODEL": "deepseek", "TEACH_ME_HOME": "/tmp/h"}

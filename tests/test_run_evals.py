@@ -38,7 +38,7 @@ def test_judge_input_includes_user_turns():
 
 class _FakeCoach:
     def __init__(self, turns): self._turns = turns
-    def run(self, turns): return list(self._turns)
+    def run(self, turns, env_extra=None): return list(self._turns)
 
 
 class _FakeChat:
@@ -67,13 +67,32 @@ def test_run_scenario_no_judge_skips_chat():
 def test_all_shipped_scenarios_load_and_reference_known_asserts():
     scenarios_dir = Path(__file__).resolve().parent.parent / "evals" / "scenarios"
     scenarios = run_evals.load_scenarios(scenarios_dir)
-    assert len(scenarios) == 6
+    assert len(scenarios) == 8
     ids = {s["id"] for s in scenarios}
     assert ids == {"f1-no-dump", "m1-socratic-first", "m10-unknown-flag",
-                   "f3-mastery-gate", "m5-just-tell-me", "f5-fatigue-terminal"}
+                   "f3-mastery-gate", "m5-just-tell-me", "f5-fatigue-terminal",
+                   "r1-review-recall", "r2-review-fail-relearn"}
     for s in scenarios:
         assert s["turns"] and isinstance(s["turns"], list)
         assert s.get("judge", {}).get("rubric")
         for spec in s.get("asserts") or []:
             name = spec if isinstance(spec, str) else next(iter(spec))
             assert name in REGISTRY, f"{s['id']} references unknown assert {name}"
+        for rec in (s.get("setup") or {}).get("seed") or []:
+            assert rec.get("topic") and rec.get("concept") and rec.get("review_question")
+
+
+def test_run_scenario_seeds_home_and_passes_teach_me_home():
+    captured = []
+    class _SeedCoach:
+        def run(self, turns, env_extra=None):
+            captured.append(env_extra)
+            return ["preamble", "the event loop question?"]
+    scenario = {"id": "r", "turns": ["/teach-me review"],
+                "setup": {"seed": [{"topic": "t", "concept": "c",
+                                    "review_question": "explain the event loop"}]},
+                "asserts": [], "samples": 1}
+    r = run_evals.run_scenario(scenario, coach=_SeedCoach(), judge_chat=None,
+                               samples_override=1, judge_on=False)
+    assert r["passed"] is True
+    assert captured and "TEACH_ME_HOME" in (captured[0] or {})

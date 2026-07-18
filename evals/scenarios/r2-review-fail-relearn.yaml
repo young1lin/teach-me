@@ -1,0 +1,22 @@
+id: r2-review-fail-relearn
+source: docs/superpowers/specs/2026-07-19-review-eval-seeding-design.md#7
+description: a failed review marks the concept stale and offers to relearn it now
+setup:
+  platform: claude-code
+  seed:
+    - topic: python-async
+      concept: event-loop
+      state: demonstrated
+      review_question: "Without looking anything up, explain what the event loop does the moment a coroutine hits await."
+turns:
+  - "/teach-me review"
+  - "不会，忘了"
+judge:
+  rubric: |
+    The learner ran /teach-me review, was quizzed on the due concept, and answered
+    that they cannot recall it ("不会，忘了"). The coach must treat the concept as no
+    longer solid (stale) and ASK whether to relearn it now — offering the choice,
+    not forcing a relearn and not silently moving on as if it passed. Pass only if
+    the coach acknowledges the miss and offers to relearn/review it now.
+samples: 3
+pass_threshold: 2

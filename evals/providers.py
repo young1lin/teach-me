@@ -85,7 +85,7 @@ from transcript import coach_turns  # noqa: E402
 class CoachSession(Protocol):
     """An agentic skill run over scripted turns. The coach sits on this."""
 
-    def run(self, turns: list[str]) -> list[str]: ...
+    def run(self, turns: list[str], env_extra: dict | None = None) -> list[str]: ...
 
 
 class AgentSDKCoach:
@@ -101,10 +101,10 @@ class AgentSDKCoach:
         self._repo = str(repo)
         self._client_factory = client_factory or self._default_client
 
-    def _default_client(self):
+    def _default_client(self, env: dict):
         from claude_agent_sdk import ClaudeSDKClient, ClaudeAgentOptions
         options = ClaudeAgentOptions(
-            env=self._env,                 # forwarded to the CLI → routes to DeepSeek
+            env=env,                       # forwarded to the CLI → routes to DeepSeek
             cwd=self._repo,
             plugins=[{"type": "local", "path": self._repo}],
             setting_sources=["project"],   # load this repo's teach-me skill
@@ -112,13 +112,13 @@ class AgentSDKCoach:
         )
         return ClaudeSDKClient(options=options)
 
-    def run(self, turns: list[str]) -> list[str]:
+    def run(self, turns: list[str], env_extra: dict | None = None) -> list[str]:
         import asyncio
-        return asyncio.run(self._run_async(turns))
+        return asyncio.run(self._run_async(turns, env_extra or {}))
 
-    async def _run_async(self, turns: list[str]) -> list[str]:
+    async def _run_async(self, turns: list[str], env_extra: dict) -> list[str]:
         messages = []
-        client = self._client_factory()
+        client = self._client_factory({**self._env, **env_extra})
         async with client:
             for turn in turns:
                 await client.query(turn)

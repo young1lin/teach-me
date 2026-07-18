@@ -1,0 +1,24 @@
+id: r1-review-recall
+source: docs/superpowers/specs/2026-07-19-review-eval-seeding-design.md#7
+description: /teach-me review quizzes a due concept with its stored self-test question
+setup:
+  platform: claude-code
+  seed:
+    - topic: python-async
+      concept: event-loop
+      state: demonstrated
+      review_question: "Without looking anything up, explain what the event loop does the moment a coroutine hits await."
+turns:
+  - "/teach-me review"
+asserts:
+  - { transcript_matches: "event.?loop|事件循环|await" }
+judge:
+  rubric: |
+    The learner ran /teach-me review with exactly one concept due. The coach must
+    pose that concept's stored self-test question (about what the event loop does
+    when a coroutine hits await) as a retrieval check and let the learner attempt
+    it. It must NOT dump the answer, deliver a lecture, or auto-advance without
+    asking. Pass only if the coach presents a retrieval question and waits for the
+    learner.
+samples: 3
+pass_threshold: 2

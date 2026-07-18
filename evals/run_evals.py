@@ -23,6 +23,7 @@ from session import load_env, SetupError
 from providers import make_coach, make_chat
 from asserts import REGISTRY
 from judge import judge as run_judge
+from seed import seeded_home
 
 EVALS_DIR = Path(__file__).resolve().parent
 SCENARIOS_DIR = EVALS_DIR / "scenarios"
@@ -70,12 +71,21 @@ def _judge_input(user_turns: list[str], turns: list[str], limit: int = 8000) -> 
             f"COACH RESPONSE(S):\n{_excerpt(turns, limit)}")
 
 
+def _run_once(coach, turns, seed_spec):
+    """One coach run; seeded into an isolated TEACH_ME_HOME when seed_spec is given."""
+    if not seed_spec:
+        return coach.run(turns)
+    with seeded_home(seed_spec) as home:
+        return coach.run(turns, env_extra={"TEACH_ME_HOME": str(home)})
+
+
 def run_scenario(scenario: dict, *, coach, judge_chat, samples_override, judge_on) -> dict:
     samples = samples_override or scenario.get("samples", 3)
     threshold = effective_threshold(scenario.get("pass_threshold", 2), samples)
+    seed_spec = (scenario.get("setup") or {}).get("seed")
     per_sample = []
     for _ in range(samples):
-        turns = coach.run(scenario["turns"])
+        turns = _run_once(coach, scenario["turns"], seed_spec)
         assert_results = run_asserts(turns, scenario.get("asserts"))
         asserts_ok = all(ok for _, ok in assert_results)
         verdict = {"pass": True, "evidence": "", "reasoning": "judge skipped"}
