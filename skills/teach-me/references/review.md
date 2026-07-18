@@ -5,9 +5,14 @@ Explicitly invoked only, via `/teach-me review` (`$teach-me review`). Never auto
 
 ## Procedure
 
-1. Get the due list deterministically: `python scripts/store.py due --limit 5`. Each line is
-   `topic<TAB>concept<TAB>state<TAB>box<TAB>days_overdue<TAB>path`. Empty output → tell the
-   user nothing is due and stop.
+1. Get the due list deterministically: `python scripts/store.py due --limit 5` (the script is
+   under this skill's directory — resolve its path there, don't assume the current working
+   directory). Each line is `topic<TAB>concept<TAB>state<TAB>box<TAB>days_overdue<TAB>path`.
+   Only **empty output from a command that exited successfully** means nothing is due → tell the
+   user nothing is due and stop. If the command errors instead (non-zero exit, a traceback, or
+   "No such file or directory"), it did **not** report an empty due list — surface the problem
+   and fix it (e.g. re-run with the correct script path); never tell the user nothing is due on
+   the strength of a command that failed.
 2. For each due concept, in the order printed (prerequisites come first), open its record and
    ask its stored **"Review question (self-test prompt)"** as a retrieval check. One question
    per turn. Obey every fatigue hard rule in `teaching.md` — stop immediately on any stop or
@@ -27,5 +32,6 @@ Explicitly invoked only, via `/teach-me review` (`$teach-me review`). Never auto
 
 - Batch cap: at most 5 due concepts per review session unless the user asks for more.
 - Never compute due dates or box transitions by hand — `store.py` owns all schedule math.
-- Review changes retention state only; it never fabricates prior learning. If `due` returns
-  nothing, say so.
+- Review changes retention state only; it never fabricates prior learning. Only a **successful**
+  `due` that returns nothing means nothing is due — say so; a `due` command that errored is a
+  problem to surface and fix, never grounds to report "nothing due".

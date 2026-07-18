@@ -69,7 +69,11 @@ cap of 5, fatigue rules, verdict→pass/fail, fail→relearn, prerequisite hint 
 ## Passive due-surfacing (only inside an invoked session)
 
 At the end of an already-invoked teach-me session (any branch) and at the start of `resume`,
-run `python scripts/store.py due` and count the returned lines to see whether anything is due.
-If any are, print one line and nothing more: "N concept(s) are due for review — run
-`/teach-me review` when you want." (N is the number of lines `due` printed.) Never surface due
-items outside an invoked teach-me session, and never start review on your own.
+run `python scripts/store.py due` (the script lives under this skill's directory — resolve its
+path there, don't assume the current working directory) and count the returned lines to see
+whether anything is due. Act only on a command that exited successfully: if it errors, stay
+silent rather than mis-reporting — passive surfacing is a nicety, not worth interrupting the
+session with an error. If the successful command printed any lines, print one line and nothing
+more: "N concept(s) are due for review — run `/teach-me review` when you want." (N is the number
+of lines `due` printed.) Never surface due items outside an invoked teach-me session, and never
+start review on your own.
