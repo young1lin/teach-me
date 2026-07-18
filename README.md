@@ -8,8 +8,9 @@
 English | [中文](README.zh-CN.md)
 
 A learning-coach skill for coding agents. Turn LLM-era work and reading into observable
-understanding: debrief work you just did, or learn a topic to observable understanding, with
-resumable checkpoints. **Explicitly invoked** — it never auto-activates.
+understanding — and keep it: debrief work you just did, learn a topic to observable
+understanding, then come back for spaced-repetition reviews so it actually sticks. Resumable
+checkpoints throughout. **Explicitly invoked** — it never auto-activates.
 
 Invoke with `/teach-me` (Claude Code / Cursor / Antigravity) or `$teach-me` (Codex /
 OpenCode).
@@ -51,6 +52,28 @@ Your turn: we drop the jitter but keep backoff — what failure returns, and whe
 Pairs well with [grill-me](https://github.com/mattpocock/skills): grill your plan before
 you build; run teach-me after you ship, so the speed AI gives you doesn't cost you the
 understanding.
+
+## Review & retention
+
+Reaching "observable understanding" in one session isn't the finish line — teach-me schedules
+every demonstrated concept for later retrieval checks so it actually sticks. Run a review when
+you want; nothing is auto-started.
+
+```bash
+/teach-me review        # quiz the concepts that are due today
+$teach-me review        # Codex / OpenCode
+```
+
+- **Spaced repetition** — each concept rides a Leitner ladder (`1 → 3 → 7 → 21 → 60` days).
+  Recall it and the interval grows; miss it and it resets to `stale`, and teach-me offers to
+  reteach it on the spot.
+- **Due, never nagging** — a review runs only when you ask. At the end of a session, or on
+  `resume`, teach-me prints one quiet line if anything is due — never more, never elsewhere.
+- **Prerequisites first** — concepts record what they depend on, so reviews check foundations
+  before the things built on them.
+
+Reviews are batch-capped (5 by default) and obey the same fatigue rules as teaching — one
+question at a time, and they stop the moment you're done.
 
 ## Your learning data
 
