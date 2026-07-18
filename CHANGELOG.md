@@ -6,7 +6,7 @@ All notable changes to **teach-me** are documented in this file. The format is b
 
 English | [中文](CHANGELOG.zh-CN.md)
 
-## [0.0.2] - 2026-07-18
+## [0.0.2] - 2026-07-19
 
 ### Added
 
