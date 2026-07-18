@@ -6,6 +6,29 @@ All notable changes to **teach-me** are documented in this file. The format is b
 
 English | [中文](CHANGELOG.zh-CN.md)
 
+## [0.0.2] - 2026-07-18
+
+### Added
+
+- **Review & retention layer** — closes the retention loop: a concept is no longer only
+  taught to observable understanding within a session, but scheduled for later retrieval
+  checks and tracked as it decays. Activates dormant schema fields (`deps`, the
+  `retained`/`stale` states, per-record dates) with a small deterministic engine rather
+  than new subsystems.
+  - **Spaced repetition** — a Leitner box ladder (`[1, 3, 7, 21, 60]`-day intervals): a
+    passed review promotes a concept one box (longer interval); a failed review resets it
+    to box 1.
+  - **`/teach-me review`** (`$teach-me review`) — quizzes due concepts using their stored
+    self-test question and updates the schedule; batch-capped at 5 and bound by the usual
+    fatigue rules. Due items are also surfaced as a single passive line at the end of a
+    session or on `resume` — never auto-started, never surfaced outside an invoked session.
+  - **Prerequisites (`deps`)** — concepts record their prerequisites, used to order reviews
+    (prerequisite before dependent) and, on a failed review, to offer checking a shaky
+    prerequisite first.
+  - `store.py` gains `due`, `review`, and `save-record --deps`; all schedule math is
+    deterministic and covered by offline unit tests. Pre-existing records migrate in
+    automatically on their first review (no breaking change).
+
 ## [0.0.1] - 2026-07-14
 
 ### Added
@@ -36,4 +59,5 @@ English | [中文](CHANGELOG.zh-CN.md)
   single-source versioning, release workflow (validate on PR, release on `v*` tag),
   behavior scenarios, and pytest suites for the archive/store layers.
 
+[0.0.2]: https://github.com/young1lin/teach-me/releases/tag/v0.0.2
 [0.0.1]: https://github.com/young1lin/teach-me/releases/tag/v0.0.1

@@ -1,6 +1,6 @@
 {
   "name": "teach-me",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Learning-coach skill for coding agents (explicit /teach-me invocation)",
   "license": "MIT",
   "homepage": "https://github.com/young1lin/teach-me",

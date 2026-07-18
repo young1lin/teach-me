@@ -1,6 +1,6 @@
 {
   "name": "teach-me",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Learning coach: turn LLM-era work and reading into observable understanding. Explicitly invoked via $teach-me (Codex) or /teach-me (Claude Code).",
   "author": {
     "name": "young1lin",

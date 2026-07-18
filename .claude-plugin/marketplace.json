@@ -7,7 +7,7 @@
     {
       "name": "teach-me",
       "description": "Learning-coach skill (explicit /teach-me invocation)",
-      "version": "0.0.1",
+      "version": "0.0.2",
       "source": "./",
       "author": {
         "name": "young1lin"
