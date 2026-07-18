@@ -36,7 +36,7 @@ REQUIRED_FILES = [
     ".github/workflows/release.yml",
     "tests/test_archive.py",
     "tests/test_store.py",
-    "docs/release-checklist.md",
+    ".claude/harness/VERSION.md",
 ]
 
 JSON_FILES = [p for p in REQUIRED_FILES if p.endswith(".json")]

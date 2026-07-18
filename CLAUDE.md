@@ -23,6 +23,14 @@ explicit token triggers it. Full trigger rules live in `skills/teach-me/SKILL.md
 - `tests/teach-me-scenarios.md` — behavior scenarios.
 - `evals/` — paid, local behavioral eval harness (uv project). Full docs: `evals/README.md`.
 
+## Releasing & versioning
+
+**All release process lives in [`.claude/harness/VERSION.md`](.claude/harness/VERSION.md).**
+For anything about cutting a release — SemVer policy, the version bump
+(`scripts/bump-version.py`, six manifests kept in lockstep), the CRLF gotcha,
+changelogs (EN + zh-CN), the pre-tag gates, tagging, and the automated GitHub
+release workflow — follow that file. Do not re-derive the steps here.
+
 ## Evals (paid, local — never CI)
 
 Behavioral tests that drive the **real** teach-me skill via the Claude Agent SDK and
